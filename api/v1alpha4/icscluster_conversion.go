@@ -19,7 +19,7 @@ package v1alpha4
 import (
 	"sigs.k8s.io/controller-runtime/pkg/conversion"
 
-	infrav1beta1 "github.com/inspur-ics/cluster-api-provider-ics/api/v1beta1"
+	infrav1beta1 "github.com/ics-sigs/cluster-api-provider-ics/api/v1beta1"
 )
 
 

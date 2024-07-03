@@ -25,12 +25,12 @@ import (
 	"github.com/pkg/errors"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 
-	basetypv1 "github.com/inspur-ics/ics-go-sdk/client/types"
-	basetkv1 "github.com/inspur-ics/ics-go-sdk/task"
-	basevmv1 "github.com/inspur-ics/ics-go-sdk/vm"
+	basetypv1 "github.com/ics-sigs/ics-go-sdk/client/types"
+	basetkv1 "github.com/ics-sigs/ics-go-sdk/task"
+	basevmv1 "github.com/ics-sigs/ics-go-sdk/vm"
 
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/context"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/services/goclient/net"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/context"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/services/goclient/net"
 )
 
 func sanitizeIPAddrs(ctx *context.VMContext, ipAddrs []string) []string {

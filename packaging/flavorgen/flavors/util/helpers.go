@@ -25,7 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/yaml"
 
-	"github.com/inspur-ics/cluster-api-provider-ics/packaging/flavorgen/flavors/env"
+	"github.com/ics-sigs/cluster-api-provider-ics/packaging/flavorgen/flavors/env"
 )
 
 type Replacement struct {

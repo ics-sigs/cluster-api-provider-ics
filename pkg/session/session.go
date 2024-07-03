@@ -28,10 +28,10 @@ import (
 	"github.com/pkg/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	basegov1 "github.com/inspur-ics/ics-go-sdk"
-	basesenv1 "github.com/inspur-ics/ics-go-sdk/session"
+	basegov1 "github.com/ics-sigs/ics-go-sdk"
+	basesenv1 "github.com/ics-sigs/ics-go-sdk/session"
 
-	infrav1 "github.com/inspur-ics/cluster-api-provider-ics/api/v1beta1"
+	infrav1 "github.com/ics-sigs/cluster-api-provider-ics/api/v1beta1"
 )
 
 // global Session map against sessionKeys

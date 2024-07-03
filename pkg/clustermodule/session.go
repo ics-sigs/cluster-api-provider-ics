@@ -25,10 +25,10 @@ import (
 	"sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	infrav1 "github.com/inspur-ics/cluster-api-provider-ics/api/v1beta1"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/context"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/identity"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/session"
+	infrav1 "github.com/ics-sigs/cluster-api-provider-ics/api/v1beta1"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/context"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/identity"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/session"
 )
 
 func fetchSessionForObject(ctx *context.ClusterContext, template *infrav1.ICSMachineTemplate) (*session.Session, error) {

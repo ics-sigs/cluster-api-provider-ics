@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/context"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/context"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"

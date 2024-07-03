@@ -21,11 +21,11 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 
-	basetypv1 "github.com/inspur-ics/ics-go-sdk/client/types"
-	basestv1 "github.com/inspur-ics/ics-go-sdk/storage"
-	basevmv1 "github.com/inspur-ics/ics-go-sdk/vm"
+	basetypv1 "github.com/ics-sigs/ics-go-sdk/client/types"
+	basestv1 "github.com/ics-sigs/ics-go-sdk/storage"
+	basevmv1 "github.com/ics-sigs/ics-go-sdk/vm"
 
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/session"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/session"
 )
 
 type ovfContext interface {

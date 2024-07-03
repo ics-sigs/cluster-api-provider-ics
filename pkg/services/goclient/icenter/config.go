@@ -96,13 +96,13 @@ type AuthInfo struct {
 
 
 // clouds:
-//   10.48.51.30:
+//   192.168.1.1:
 //     auth:
-//       username: "admin"
-//       password: "inspur1!"
+//       username: "administrator"
+//       password: "ICS@0703s1"
 //       domain: "internal"
 //       locale: "cn"
-//     auth_type: "password"
-//     url: "https://10.48.51.30:443"
+//     auth_type: "token"
+//     url: "https://192.168.1.1:443"
 //     verify: false
-//     api_version: "5.8"
+//     api_version: "x.x"

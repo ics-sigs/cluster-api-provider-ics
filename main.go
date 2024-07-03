@@ -36,13 +36,13 @@ import (
 	ctrlmgr "sigs.k8s.io/controller-runtime/pkg/manager"
 	ctrlsig "sigs.k8s.io/controller-runtime/pkg/manager/signals"
 
-	"github.com/inspur-ics/cluster-api-provider-ics/api/v1beta1"
-	"github.com/inspur-ics/cluster-api-provider-ics/controllers"
-	"github.com/inspur-ics/cluster-api-provider-ics/feature"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/constants"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/context"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/manager"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/version"
+	"github.com/ics-sigs/cluster-api-provider-ics/api/v1beta1"
+	"github.com/ics-sigs/cluster-api-provider-ics/controllers"
+	"github.com/ics-sigs/cluster-api-provider-ics/feature"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/constants"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/context"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/manager"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/version"
 )
 
 var (

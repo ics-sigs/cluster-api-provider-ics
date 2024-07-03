@@ -24,7 +24,7 @@ import (
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	infrav1 "github.com/inspur-ics/cluster-api-provider-ics/api/v1beta1"
+	infrav1 "github.com/ics-sigs/cluster-api-provider-ics/api/v1beta1"
 )
 
 // GetICSClusterFromICSMachine gets the infrastructure.cluster.x-k8s.io.ICSCluster resource for the given ICSMachine.

@@ -1,4 +1,4 @@
-module github.com/inspur-ics/cluster-api-provider-ics/hack/tools
+module github.com/ics-sigs/cluster-api-provider-ics/hack/tools
 
 go 1.17
 

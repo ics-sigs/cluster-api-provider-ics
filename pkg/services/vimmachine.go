@@ -34,9 +34,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	ctrlutil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	infrav1 "github.com/inspur-ics/cluster-api-provider-ics/api/v1beta1"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/context"
-	infrautilv1 "github.com/inspur-ics/cluster-api-provider-ics/pkg/util"
+	infrav1 "github.com/ics-sigs/cluster-api-provider-ics/api/v1beta1"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/context"
+	infrautilv1 "github.com/ics-sigs/cluster-api-provider-ics/pkg/util"
 )
 
 type VimMachineService struct{}
@@ -84,7 +84,7 @@ func (v *VimMachineService) ReconcileDelete(c context.MachineContext) error {
 		}
 	}
 
-	// ICSMachine wraps a VMSphereVM, so we are mirroring status from the underlying VMSphereVM
+	// ICSMachine wraps a ICSVM, so we are mirroring status from the underlying ICSVM
 	// in order to provide evidences about machine deletion.
 	conditions.SetMirror(ctx.ICSMachine, infrav1.VMProvisionedCondition, vm)
 	return nil
@@ -143,7 +143,7 @@ func (v *VimMachineService) ReconcileNormal(c context.MachineContext) (bool, err
 			return false, errors.Wrapf(err, "unexpected error while reconciling ready state for %s", ctx)
 		}
 		// ctx.Logger.Info("waiting for ready state")
-		// ICSMachine wraps a VMSphereVM, so we are mirroring status from the underlying VMSphereVM
+		// ICSMachine wraps a ICSVM, so we are mirroring status from the underlying ICSVM
 		// in order to provide evidences about machine provisioning while provisioning is actually happening.
 		conditions.SetMirror(ctx.ICSMachine, infrav1.VMProvisionedCondition, conditions.UnstructuredGetter(vmObj))
 		return true, nil

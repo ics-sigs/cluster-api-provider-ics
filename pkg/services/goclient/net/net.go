@@ -23,15 +23,15 @@ import (
 	"github.com/pkg/errors"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 
-	basecltv1 "github.com/inspur-ics/ics-go-sdk/client"
-	basetypv1 "github.com/inspur-ics/ics-go-sdk/client/types"
-	basetkv1 "github.com/inspur-ics/ics-go-sdk/task"
-	basevmv1 "github.com/inspur-ics/ics-go-sdk/vm"
+	basecltv1 "github.com/ics-sigs/ics-go-sdk/client"
+	basetypv1 "github.com/ics-sigs/ics-go-sdk/client/types"
+	basetkv1 "github.com/ics-sigs/ics-go-sdk/task"
+	basevmv1 "github.com/ics-sigs/ics-go-sdk/vm"
 
-	infrav1 "github.com/inspur-ics/cluster-api-provider-ics/api/v1beta1"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/context"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/services/goclient/icenter"
-	infrautilv1 "github.com/inspur-ics/cluster-api-provider-ics/pkg/util"
+	infrav1 "github.com/ics-sigs/cluster-api-provider-ics/api/v1beta1"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/context"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/services/goclient/icenter"
+	infrautilv1 "github.com/ics-sigs/cluster-api-provider-ics/pkg/util"
 )
 
 // NetworkStatus provides information about one of a VM's networks.

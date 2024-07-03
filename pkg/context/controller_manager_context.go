@@ -27,7 +27,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/record"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/record"
 )
 
 // ControllerManagerContext is the context of the controller that owns the

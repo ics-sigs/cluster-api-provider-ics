@@ -17,11 +17,11 @@ limitations under the License.
 package infrastructure
 
 import (
-	basetypv1 "github.com/inspur-ics/ics-go-sdk/client/types"
-	basevmv1 "github.com/inspur-ics/ics-go-sdk/vm"
+	basetypv1 "github.com/ics-sigs/ics-go-sdk/client/types"
+	basevmv1 "github.com/ics-sigs/ics-go-sdk/vm"
 
-	infrav1 "github.com/inspur-ics/cluster-api-provider-ics/api/v1beta1"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/context"
+	infrav1 "github.com/ics-sigs/cluster-api-provider-ics/api/v1beta1"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/context"
 )
 
 type virtualMachineContext struct {

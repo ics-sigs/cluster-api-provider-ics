@@ -22,8 +22,8 @@ import (
 	"github.com/go-logr/logr"
 	"sigs.k8s.io/cluster-api/util/patch"
 
-	infrav1 "github.com/inspur-ics/cluster-api-provider-ics/api/v1beta1"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/session"
+	infrav1 "github.com/ics-sigs/cluster-api-provider-ics/api/v1beta1"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/session"
 )
 
 // VMContext is a Go context used with a ICSVM.

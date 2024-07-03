@@ -35,9 +35,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	infrav1 "github.com/inspur-ics/cluster-api-provider-ics/api/v1beta1"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/context"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/record"
+	infrav1 "github.com/ics-sigs/cluster-api-provider-ics/api/v1beta1"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/context"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/record"
 )
 
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=ipaddresses,verbs=get;list;watch;create;update;patch;delete

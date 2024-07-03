@@ -24,7 +24,7 @@ package v1alpha4
 import (
 	unsafe "unsafe"
 
-	v1beta1 "github.com/inspur-ics/cluster-api-provider-ics/api/v1beta1"
+	v1beta1 "github.com/ics-sigs/cluster-api-provider-ics/api/v1beta1"
 	v1 "k8s.io/api/core/v1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"

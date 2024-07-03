@@ -23,7 +23,7 @@ import (
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util/patch"
 
-	"github.com/inspur-ics/cluster-api-provider-ics/api/v1beta1"
+	"github.com/ics-sigs/cluster-api-provider-ics/api/v1beta1"
 )
 
 // ClusterContext is a Go context used with a ICSCluster.

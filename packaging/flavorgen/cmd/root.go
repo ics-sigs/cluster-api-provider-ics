@@ -22,8 +22,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/inspur-ics/cluster-api-provider-ics/packaging/flavorgen/flavors"
-	"github.com/inspur-ics/cluster-api-provider-ics/packaging/flavorgen/flavors/util"
+	"github.com/ics-sigs/cluster-api-provider-ics/packaging/flavorgen/flavors"
+	"github.com/ics-sigs/cluster-api-provider-ics/packaging/flavorgen/flavors/util"
 )
 
 const flavorFlag = "flavor"

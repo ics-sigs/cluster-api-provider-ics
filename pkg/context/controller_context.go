@@ -21,7 +21,7 @@ import (
 
 	"github.com/go-logr/logr"
 
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/record"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/record"
 )
 
 // ControllerContext is the context of a controller.

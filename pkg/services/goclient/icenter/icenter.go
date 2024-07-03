@@ -22,18 +22,18 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
-	infrav1 "github.com/inspur-ics/cluster-api-provider-ics/api/v1beta1"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/context"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/services/goclient/image"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/services/goclient/template"
+	infrav1 "github.com/ics-sigs/cluster-api-provider-ics/api/v1beta1"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/context"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/services/goclient/image"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/services/goclient/template"
 	"github.com/pkg/errors"
 
-	infrautilv1 "github.com/inspur-ics/cluster-api-provider-ics/pkg/util"
-	basetypv1 "github.com/inspur-ics/ics-go-sdk/client/types"
-	basehstv1 "github.com/inspur-ics/ics-go-sdk/host"
-	basenetv1 "github.com/inspur-ics/ics-go-sdk/network"
-	basestv1 "github.com/inspur-ics/ics-go-sdk/storage"
-	basevmv1 "github.com/inspur-ics/ics-go-sdk/vm"
+	infrautilv1 "github.com/ics-sigs/cluster-api-provider-ics/pkg/util"
+	basetypv1 "github.com/ics-sigs/ics-go-sdk/client/types"
+	basehstv1 "github.com/ics-sigs/ics-go-sdk/host"
+	basenetv1 "github.com/ics-sigs/ics-go-sdk/network"
+	basestv1 "github.com/ics-sigs/ics-go-sdk/storage"
+	basevmv1 "github.com/ics-sigs/ics-go-sdk/vm"
 )
 
 const (

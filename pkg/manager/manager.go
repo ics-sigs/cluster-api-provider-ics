@@ -28,10 +28,10 @@ import (
 	controlplanev1 "sigs.k8s.io/cluster-api/controlplane/kubeadm/api/v1beta1"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	infrav1a4 "github.com/inspur-ics/cluster-api-provider-ics/api/v1alpha4"
-	infrav1b1 "github.com/inspur-ics/cluster-api-provider-ics/api/v1beta1"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/context"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/record"
+	infrav1a4 "github.com/ics-sigs/cluster-api-provider-ics/api/v1alpha4"
+	infrav1b1 "github.com/ics-sigs/cluster-api-provider-ics/api/v1beta1"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/context"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/record"
 )
 
 // Manager is a CAPICS controller manager.

@@ -20,7 +20,7 @@ import (
 	utilconversion "sigs.k8s.io/cluster-api/util/conversion"
 	"sigs.k8s.io/controller-runtime/pkg/conversion"
 
-	infrav1beta1 "github.com/inspur-ics/cluster-api-provider-ics/api/v1beta1"
+	infrav1beta1 "github.com/ics-sigs/cluster-api-provider-ics/api/v1beta1"
 )
 
 // ConvertTo converts this ICSVM to the Hub version (v1beta1).

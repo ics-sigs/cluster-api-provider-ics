@@ -21,12 +21,12 @@ import (
 
 	"github.com/pkg/errors"
 
-	basetypv1 "github.com/inspur-ics/ics-go-sdk/client/types"
-	basecluv1 "github.com/inspur-ics/ics-go-sdk/cluster"
+	basetypv1 "github.com/ics-sigs/ics-go-sdk/client/types"
+	basecluv1 "github.com/ics-sigs/ics-go-sdk/cluster"
 
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/context"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/services/goclient/cluster"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/session"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/context"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/services/goclient/cluster"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/session"
 )
 
 const validMachineTemplate = "ICSMachineTemplate"

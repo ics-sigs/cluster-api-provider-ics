@@ -24,7 +24,7 @@ import (
 	. "github.com/onsi/gomega"
 	apirecord "k8s.io/client-go/tools/record"
 
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/record"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/record"
 )
 
 var _ = Describe("Event utils", func() {

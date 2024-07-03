@@ -21,7 +21,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime"
 
-	"github.com/inspur-ics/cluster-api-provider-ics/packaging/flavorgen/flavors/env"
+	"github.com/ics-sigs/cluster-api-provider-ics/packaging/flavorgen/flavors/env"
 )
 
 func MultiNodeTemplateWithOutLoadBalancer() []runtime.Object {

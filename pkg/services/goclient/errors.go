@@ -19,7 +19,7 @@ package infrastructure
 import (
 	"fmt"
 
-	basegov1 "github.com/inspur-ics/ics-go-sdk"
+	basegov1 "github.com/ics-sigs/ics-go-sdk"
 )
 
 // errNotFound is returned by the findVM function when a VM is not found.

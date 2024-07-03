@@ -19,9 +19,9 @@ package cluster
 import (
 	"context"
 
-	basecltv1 "github.com/inspur-ics/ics-go-sdk/client"
-	basetypv1 "github.com/inspur-ics/ics-go-sdk/client/types"
-	basecluv1 "github.com/inspur-ics/ics-go-sdk/cluster"
+	basecltv1 "github.com/ics-sigs/ics-go-sdk/client"
+	basetypv1 "github.com/ics-sigs/ics-go-sdk/client/types"
+	basecluv1 "github.com/ics-sigs/ics-go-sdk/cluster"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 

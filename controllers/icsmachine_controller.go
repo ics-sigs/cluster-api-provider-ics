@@ -46,12 +46,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	infrav1 "github.com/inspur-ics/cluster-api-provider-ics/api/v1beta1"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/constants"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/context"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/record"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/services"
-	infrautilv1 "github.com/inspur-ics/cluster-api-provider-ics/pkg/util"
+	infrav1 "github.com/ics-sigs/cluster-api-provider-ics/api/v1beta1"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/constants"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/context"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/record"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/services"
+	infrautilv1 "github.com/ics-sigs/cluster-api-provider-ics/pkg/util"
 )
 
 const hostInfoErrStr = "host info cannot be used as a label value"

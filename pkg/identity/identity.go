@@ -26,8 +26,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 
-	infrav1 "github.com/inspur-ics/cluster-api-provider-ics/api/v1beta1"
-	basev1 "github.com/inspur-ics/cluster-api-provider-ics/pkg/services/goclient/icenter"
+	infrav1 "github.com/ics-sigs/cluster-api-provider-ics/api/v1beta1"
+	basev1 "github.com/ics-sigs/cluster-api-provider-ics/pkg/services/goclient/icenter"
 )
 
 const (

@@ -16,7 +16,7 @@ limitations under the License.
 
 package clustermodule
 
-import "github.com/inspur-ics/cluster-api-provider-ics/pkg/context"
+import "github.com/ics-sigs/cluster-api-provider-ics/pkg/context"
 
 type Service interface {
 	Create(ctx *context.ClusterContext, wrapper Wrapper) (string, error)

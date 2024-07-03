@@ -17,7 +17,7 @@ limitations under the License.
 package main
 
 import (
-	"github.com/inspur-ics/cluster-api-provider-ics/packaging/flavorgen/cmd"
+	"github.com/ics-sigs/cluster-api-provider-ics/packaging/flavorgen/cmd"
 )
 
 func main() {

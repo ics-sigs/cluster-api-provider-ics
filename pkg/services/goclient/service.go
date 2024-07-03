@@ -24,15 +24,15 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apitypes "k8s.io/apimachinery/pkg/types"
 
-	basehstv1 "github.com/inspur-ics/ics-go-sdk/host"
-	basetkv1 "github.com/inspur-ics/ics-go-sdk/task"
-	basevmv1 "github.com/inspur-ics/ics-go-sdk/vm"
+	basehstv1 "github.com/ics-sigs/ics-go-sdk/host"
+	basetkv1 "github.com/ics-sigs/ics-go-sdk/task"
+	basevmv1 "github.com/ics-sigs/ics-go-sdk/vm"
 
-	infrav1 "github.com/inspur-ics/cluster-api-provider-ics/api/v1beta1"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/context"
-	basev1 "github.com/inspur-ics/cluster-api-provider-ics/pkg/services/goclient/icenter"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/services/goclient/net"
-	infrautilv1 "github.com/inspur-ics/cluster-api-provider-ics/pkg/util"
+	infrav1 "github.com/ics-sigs/cluster-api-provider-ics/api/v1beta1"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/context"
+	basev1 "github.com/ics-sigs/cluster-api-provider-ics/pkg/services/goclient/icenter"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/services/goclient/net"
+	infrautilv1 "github.com/ics-sigs/cluster-api-provider-ics/pkg/util"
 )
 
 // VMService provdes API to interact with the VMs using golang ics sdk

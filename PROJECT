@@ -2,7 +2,7 @@ domain: cluster.x-k8s.io
 layout:
 - go.kubebuilder.io/v3
 projectName: cluster-api-provider-ics
-repo: github.com/inspur-ics/cluster-api-provider-ics
+repo: github.com/ics-sigs/cluster-api-provider-ics
 resources:
 - api:
     crdVersion: v1
@@ -11,7 +11,7 @@ resources:
   domain: cluster.x-k8s.io
   group: infrastructure
   kind: ICSCluster
-  path: github.com/inspur-ics/cluster-api-provider-ics/api/v1beta1
+  path: github.com/ics-sigs/cluster-api-provider-ics/api/v1beta1
   version: v1beta1
   webhooks:
     conversion: true
@@ -23,7 +23,7 @@ resources:
   domain: cluster.x-k8s.io
   group: infrastructure
   kind: ICSMachine
-  path: github.com/inspur-ics/cluster-api-provider-ics/api/v1beta1
+  path: github.com/ics-sigs/cluster-api-provider-ics/api/v1beta1
   version: v1beta1
   webhooks:
     conversion: true
@@ -35,7 +35,7 @@ resources:
   domain: cluster.x-k8s.io
   group: infrastructure
   kind: ICSMachineTemplate
-  path: github.com/inspur-ics/cluster-api-provider-ics/api/v1beta1
+  path: github.com/ics-sigs/cluster-api-provider-ics/api/v1beta1
   version: v1beta1
   webhooks:
     conversion: true
@@ -47,7 +47,7 @@ resources:
   domain: cluster.x-k8s.io
   group: infrastructure
   kind: ICSVM
-  path: github.com/inspur-ics/cluster-api-provider-ics/api/v1beta1
+  path: github.com/ics-sigs/cluster-api-provider-ics/api/v1beta1
   version: v1beta1
   webhooks:
     conversion: true
@@ -58,7 +58,7 @@ resources:
   domain: cluster.x-k8s.io
   group: infrastructure
   kind: ICSCluster
-  path: github.com/inspur-ics/cluster-api-provider-ics/api/v1alpha4
+  path: github.com/ics-sigs/cluster-api-provider-ics/api/v1alpha4
   version: v1alpha4
   webhooks:
     conversion: true
@@ -69,7 +69,7 @@ resources:
   domain: cluster.x-k8s.io
   group: infrastructure
   kind: ICSMachine
-  path: github.com/inspur-ics/cluster-api-provider-ics/api/v1alpha4
+  path: github.com/ics-sigs/cluster-api-provider-ics/api/v1alpha4
   version: v1alpha4
   webhooks:
     conversion: true
@@ -80,7 +80,7 @@ resources:
   domain: cluster.x-k8s.io
   group: infrastructure
   kind: ICSMachineTemplate
-  path: github.com/inspur-ics/cluster-api-provider-ics/api/v1alpha4
+  path: github.com/ics-sigs/cluster-api-provider-ics/api/v1alpha4
   version: v1alpha4
   webhooks:
     conversion: true
@@ -91,7 +91,7 @@ resources:
   domain: cluster.x-k8s.io
   group: infrastructure
   kind: ICSVM
-  path: github.com/inspur-ics/cluster-api-provider-ics/api/v1alpha4
+  path: github.com/ics-sigs/cluster-api-provider-ics/api/v1alpha4
   version: v1alpha4
   webhooks:
     conversion: true

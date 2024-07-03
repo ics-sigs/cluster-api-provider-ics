@@ -44,15 +44,15 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	infrav1 "github.com/inspur-ics/cluster-api-provider-ics/api/v1beta1"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/clustermodule"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/context"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/identity"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/record"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/services"
-	basev1 "github.com/inspur-ics/cluster-api-provider-ics/pkg/services/goclient"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/session"
-	infrautilv1 "github.com/inspur-ics/cluster-api-provider-ics/pkg/util"
+	infrav1 "github.com/ics-sigs/cluster-api-provider-ics/api/v1beta1"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/clustermodule"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/context"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/identity"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/record"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/services"
+	basev1 "github.com/ics-sigs/cluster-api-provider-ics/pkg/services/goclient"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/session"
+	infrautilv1 "github.com/ics-sigs/cluster-api-provider-ics/pkg/util"
 )
 
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=icsvms,verbs=get;list;watch;create;update;patch;delete

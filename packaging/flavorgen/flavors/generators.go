@@ -19,10 +19,10 @@ package flavors
 import (
 	"fmt"
 
-	infrav1 "github.com/inspur-ics/cluster-api-provider-ics/api/v1beta1"
-	"github.com/inspur-ics/cluster-api-provider-ics/packaging/flavorgen/flavors/env"
-	"github.com/inspur-ics/cluster-api-provider-ics/packaging/flavorgen/flavors/util"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/identity"
+	infrav1 "github.com/ics-sigs/cluster-api-provider-ics/api/v1beta1"
+	"github.com/ics-sigs/cluster-api-provider-ics/packaging/flavorgen/flavors/env"
+	"github.com/ics-sigs/cluster-api-provider-ics/packaging/flavorgen/flavors/util"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/identity"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"

@@ -17,5 +17,5 @@ limitations under the License.
 // Package v1alpha4 contains API Schema definitions for the infrastructure v1alpha4 API group
 // +kubebuilder:object:generate=true
 // +groupName=infrastructure.cluster.x-k8s.io
-// +k8s:conversion-gen=github.com/inspur-ics/cluster-api-provider-ics/api/v1beta1
+// +k8s:conversion-gen=github.com/ics-sigs/cluster-api-provider-ics/api/v1beta1
 package v1alpha4

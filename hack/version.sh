@@ -85,7 +85,7 @@ version::ldflags() {
         local key=${1}
         local val=${2}
         ldflags+=(
-            "-X 'github.com/inspur-ics/cluster-api-provider-ics/pkg/version.${key}=${val}'"
+            "-X 'github.com/ics-sigs/cluster-api-provider-ics/pkg/version.${key}=${val}'"
         )
     }
 

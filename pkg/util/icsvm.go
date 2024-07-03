@@ -28,9 +28,9 @@ import (
 	clusterutilv1 "sigs.k8s.io/cluster-api/util"
 	ctrlutil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	infrav1 "github.com/inspur-ics/cluster-api-provider-ics/api/v1beta1"
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/context"
-	basetypv1 "github.com/inspur-ics/ics-go-sdk/client/types"
+	infrav1 "github.com/ics-sigs/cluster-api-provider-ics/api/v1beta1"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/context"
+	basetypv1 "github.com/ics-sigs/ics-go-sdk/client/types"
 )
 
 func CreateOrUpdateIPAddress(ctx *context.VMContext, ipAddressName string, network basetypv1.Nic) (runtime.Object, error) {

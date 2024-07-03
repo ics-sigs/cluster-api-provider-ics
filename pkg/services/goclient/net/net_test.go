@@ -19,7 +19,7 @@ package net_test
 import (
 	"testing"
 
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/services/goclient/net"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/services/goclient/net"
 )
 
 func TestErrOnLocalOnlyIPAddr(t *testing.T) {

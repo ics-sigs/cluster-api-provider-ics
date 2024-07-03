@@ -61,7 +61,7 @@ TOOLING_BINARIES := $(CONTROLLER_GEN) $(CONVERSION_GEN) $(GINKGO) $(GOLANGCI_LIN
 ARTIFACTS_PATH := $(ROOT_DIR)/_artifacts
 
 # Set --output-base for conversion-gen if we are not within GOPATH
-ifneq ($(abspath $(ROOT_DIR)),$(shell go env GOPATH)/src/github.com/inspur-ics/cluster-api-provider-ics)
+ifneq ($(abspath $(ROOT_DIR)),$(shell go env GOPATH)/src/github.com/ics-sigs/cluster-api-provider-ics)
 	OUTPUT_BASE := --output-base=$(ROOT_DIR)
 endif
 

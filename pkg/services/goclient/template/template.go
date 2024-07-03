@@ -23,10 +23,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 
-	basetypv1 "github.com/inspur-ics/ics-go-sdk/client/types"
-	basevmv1 "github.com/inspur-ics/ics-go-sdk/vm"
+	basetypv1 "github.com/ics-sigs/ics-go-sdk/client/types"
+	basevmv1 "github.com/ics-sigs/ics-go-sdk/vm"
 
-	"github.com/inspur-ics/cluster-api-provider-ics/pkg/session"
+	"github.com/ics-sigs/cluster-api-provider-ics/pkg/session"
 )
 
 type tplContext interface {
