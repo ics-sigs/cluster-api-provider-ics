@@ -356,8 +356,8 @@ func (r clusterReconciler) reconcileICenterConnectivity(ctx *context.ClusterCont
 	}
 
 	iCenter, err := identity.NewClientFromCluster(ctx, r.Client, ctx.ICSCluster)
-	if err != nil {
-		if infrautilv1.IsNotFoundError(err) {
+	if err != nil || iCenter.AuthInfo == nil {
+		if infrautilv1.IsNotFoundError(err) || iCenter.AuthInfo == nil {
 			sessionKey := ctx.ICSCluster.Spec.CloudName
 			return session.Get(ctx, sessionKey)
 		}
