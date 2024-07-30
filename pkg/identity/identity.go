@@ -20,8 +20,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
@@ -62,6 +64,19 @@ func IsSecretIdentity(cluster *infrav1.ICSCluster) bool {
 	return cluster.Spec.IdentityRef.Kind == infrav1.SecretKind
 }
 
+func IsOwnedByIdentityOrCluster(ownerReferences []metav1.OwnerReference) bool {
+	if len(ownerReferences) > 0 {
+		for _, ownerReference := range ownerReferences {
+			if !strings.Contains(ownerReference.APIVersion, infrav1.GroupName+"/") {
+				continue
+			}
+			if ownerReference.Kind == "ICSCluster" {
+				return true
+			}
+		}
+	}
+	return false
+}
 
 func ValidateMachineInputs(c client.Client, vm *infrav1.ICSVM) error {
 	if c == nil {

@@ -26,6 +26,8 @@ const (
 	// resources associated with ICSCluster before removing it from the
 	// API server.
 	ClusterFinalizer = "icscluster.infrastructure.cluster.x-k8s.io"
+
+	SecretIdentitySetFinalizer = "icscluster/infrastructure.cluster.x-k8s.io"
 )
 
 // ICenterVersion conveys the API version of the iCenter instance.

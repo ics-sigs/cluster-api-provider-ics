@@ -252,6 +252,32 @@ func (r clusterReconciler) reconcileDelete(ctx *context.ClusterContext) (reconci
 		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 	}
 
+	// Remove finalizer on Identity Secret
+	if identity.IsSecretIdentity(ctx.ICSCluster) {
+		secret := &corev1.Secret{}
+		secretKey := client.ObjectKey{
+			Namespace: ctx.ICSCluster.Namespace,
+			Name:      ctx.ICSCluster.Spec.IdentityRef.Name,
+		}
+		err := ctx.Client.Get(ctx, secretKey, secret)
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				ctrlutil.RemoveFinalizer(ctx.ICSCluster, infrav1.ClusterFinalizer)
+				return reconcile.Result{}, nil
+			}
+			return reconcile.Result{}, err
+		}
+		r.Logger.Info(fmt.Sprintf("Removing finalizer from Secret %s/%s having finalizers %v", secret.Namespace, secret.Name, secret.Finalizers))
+		ctrlutil.RemoveFinalizer(secret, infrav1.SecretIdentitySetFinalizer)
+
+		if err := ctx.Client.Update(ctx, secret); err != nil {
+			return reconcile.Result{}, err
+		}
+		if err := ctx.Client.Delete(ctx, secret); err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+
 	// Cluster is deleted so remove the finalizer.
 	ctrlutil.RemoveFinalizer(ctx.ICSCluster, infrav1.ClusterFinalizer)
 
@@ -343,6 +369,27 @@ func (r clusterReconciler) reconcileIdentitySecret(ctx *context.ClusterContext) 
 			if infrautilv1.IsNotFoundError(err) {
 				return nil
 			}
+			return err
+		}
+		// check if cluster is already an owner
+		if !clusterutilv1.IsOwnedByObject(secret, icsCluster) {
+			ownerReferences := secret.GetOwnerReferences()
+			if identity.IsOwnedByIdentityOrCluster(ownerReferences) {
+				return fmt.Errorf("another cluster has set the OwnerRef for secret: %s/%s", secret.Namespace, secret.Name)
+			}
+			ownerReferences = append(ownerReferences, metav1.OwnerReference{
+				APIVersion: infrav1.GroupVersion.String(),
+				Kind:       icsCluster.Kind,
+				Name:       icsCluster.Name,
+				UID:        icsCluster.UID,
+			})
+			secret.SetOwnerReferences(ownerReferences)
+		}
+		if !ctrlutil.ContainsFinalizer(secret, infrav1.SecretIdentitySetFinalizer) {
+			ctrlutil.AddFinalizer(secret, infrav1.SecretIdentitySetFinalizer)
+		}
+		err = r.Client.Update(ctx, secret)
+		if err != nil {
 			return err
 		}
 	}
