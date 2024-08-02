@@ -18,6 +18,7 @@ package infrastructure
 
 import (
 	"encoding/base64"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -157,7 +158,7 @@ func (vms *VMService) DestroyVM(ctx *context.VMContext) (infrav1.VirtualMachine,
 		ctx.Logger.Error(err, "fail to get power state of the vm")
 		return vm, err
 	}
-	if powerState == infrav1.VirtualMachinePowerStatePoweredOn {
+	if powerState == infrav1.VirtualMachinePowerStatePoweredOn || powerState == infrav1.VirtualMachinePowerStateSuspended {
 		task, err := vmCtx.Obj.PowerOffVM(ctx, vmRef.Value)
 		if err != nil {
 			ctx.Logger.Error(err, "power off the vm error")
@@ -165,6 +166,11 @@ func (vms *VMService) DestroyVM(ctx *context.VMContext) (infrav1.VirtualMachine,
 		}
 		ctx.ICSVM.Status.TaskRef = task.TaskId
 		ctx.Logger.Info("wait for VM to be powered off")
+		return vm, nil
+	}
+
+	if powerState == infrav1.VirtualMachineTransientState {
+		ctx.Logger.Info("VM current state is in a transient state")
 		return vm, nil
 	}
 
@@ -242,7 +248,6 @@ func (vms *VMService) reconcilePowerState(ctx *virtualMachineContext) (bool, err
 		}
 		return false, nil
 	case infrav1.VirtualMachinePowerStatePoweredOn:
-		ctx.Logger.Info("powered on")
 		return true, nil
 	default:
 		return false, errors.Errorf("unexpected power state %q for vm %s", powerState, ctx)
@@ -317,13 +322,15 @@ func (vms *VMService) getPowerState(ctx *virtualMachineContext) (infrav1.Virtual
 		return infrav1.VirtualMachinePowerStatePoweredOff, nil
 	case "PAUSED":
 		return infrav1.VirtualMachinePowerStateSuspended, nil
-	case "RESTARTING":
-		return infrav1.VirtualMachinePowerStateSuspended, nil
-	case "PENDING":
-		return infrav1.VirtualMachinePowerStateSuspended, nil
+	case "RESTARTING", "PENDING", "STOPPING", "DELETING":
+		return infrav1.VirtualMachineTransientState, nil
 	default:
-		return "", errors.Errorf("unexpected power state %q for vm %s", vmObj.Status, ctx)
 	}
+
+	if strings.HasSuffix(vmObj.Status, "ING") {
+		return infrav1.VirtualMachineTransientState, nil
+	}
+	return "", errors.Errorf("unexpected power state %q for vm %s", vmObj.Status, ctx)
 }
 
 func (vms *VMService) getNetworkStatus(ctx *virtualMachineContext) ([]infrav1.NetworkStatus, error) {

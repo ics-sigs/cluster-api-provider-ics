@@ -102,7 +102,9 @@ func AddClusterControllerToManager(ctx *context.ControllerManagerContext, mgr ma
 
 				c := &infrav1.ICSCluster{}
 				if err := reconciler.Client.Get(ctx, requests[0].NamespacedName, c); err != nil {
-					reconciler.Logger.V(4).Error(err, "Failed to get ICSCluster")
+					if !infrautilv1.IsNotFoundError(err) {
+						reconciler.Logger.V(4).Error(err, "Failed to get ICSCluster")
+					}
 					return nil
 				}
 
@@ -195,10 +197,12 @@ func (r clusterReconciler) Reconcile(ctx goctx.Context, req ctrl.Request) (_ ctr
 	// resource are patched back to the API server.
 	defer func() {
 		if err := clusterContext.Patch(); err != nil {
-			if reterr == nil {
-				reterr = err
+			if !infrautilv1.IsNotFoundError(err) {
+				if reterr == nil {
+					reterr = err
+				}
+				clusterContext.Logger.Error(err, "patch failed", "cluster", clusterContext.String())
 			}
-			clusterContext.Logger.Error(err, "patch failed", "cluster", clusterContext.String())
 		}
 	}()
 
@@ -403,8 +407,8 @@ func (r clusterReconciler) reconcileICenterConnectivity(ctx *context.ClusterCont
 	}
 
 	iCenter, err := identity.NewClientFromCluster(ctx, r.Client, ctx.ICSCluster)
-	if err != nil || iCenter.AuthInfo == nil {
-		if infrautilv1.IsNotFoundError(err) || iCenter.AuthInfo == nil {
+	if iCenter.AuthInfo == nil || err != nil {
+		if iCenter.AuthInfo == nil || infrautilv1.IsNotFoundError(err) {
 			sessionKey := ctx.ICSCluster.Spec.CloudName
 			return session.Get(ctx, sessionKey)
 		}

@@ -138,9 +138,7 @@ func reconcileInFlightTask(ctx *context.VMContext) (bool, error) {
 	logger := ctx.Logger.WithName(task.Id)
 	logger.Info("task found", "state", task.State, "task-id", task.Id)
 	switch task.State {
-	case "WAITING":
-		return true, nil
-	case "RUNNING":
+	case "WAITING", "RUNNING":
 		return true, nil
 	case "READY":
 		return true, nil

@@ -229,10 +229,12 @@ func (r vmReconciler) Reconcile(ctx goctx.Context, req ctrl.Request) (_ ctrl.Res
 
 		// Patch the ICSVM resource.
 		if err := vmContext.Patch(); err != nil {
-			if reterr == nil {
-				reterr = err
+			if !infrautilv1.IsNotFoundError(err) {
+				if reterr == nil {
+					reterr = err
+				}
+				vmContext.Logger.Error(err, "patch failed", "vm", vmContext.String())
 			}
-			vmContext.Logger.Error(err, "patch failed", "vm", vmContext.String())
 		}
 	}()
 

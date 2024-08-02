@@ -195,10 +195,12 @@ func (r machineReconciler) Reconcile(ctx goctx.Context, req ctrl.Request) (_ ctr
 
 		// Patch the ICSMachine resource.
 		if err := machineContext.Patch(); err != nil {
-			if reterr == nil {
-				reterr = err
+			if !infrautilv1.IsNotFoundError(err) {
+				if reterr == nil {
+					reterr = err
+				}
+				machineContext.GetLogger().Error(err, "patch failed", "machine", machineContext.String())
 			}
-			machineContext.GetLogger().Error(err, "patch failed", "machine", machineContext.String())
 		}
 	}()
 

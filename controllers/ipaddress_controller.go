@@ -38,6 +38,7 @@ import (
 	infrav1 "github.com/ics-sigs/cluster-api-provider-ics/api/v1beta1"
 	"github.com/ics-sigs/cluster-api-provider-ics/pkg/context"
 	"github.com/ics-sigs/cluster-api-provider-ics/pkg/record"
+	infrautilv1 "github.com/ics-sigs/cluster-api-provider-ics/pkg/util"
 )
 
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=ipaddresses,verbs=get;list;watch;create;update;patch;delete
@@ -127,10 +128,12 @@ func (r ipAddressReconciler) Reconcile(ctx goctx.Context, req ctrl.Request) (_ c
 	defer func() {
 		// Patch the ICSMachine resource.
 		if err := ipAddressContext.Patch(); err != nil {
-			if reterr == nil {
-				reterr = err
+			if !infrautilv1.IsNotFoundError(err) {
+				if reterr == nil {
+					reterr = err
+				}
+				ipAddressContext.Logger.Error(err, "patch failed", "ipaddress", ipAddressContext.String())
 			}
-			ipAddressContext.Logger.Error(err, "patch failed", "ipaddress", ipAddressContext.String())
 		}
 	}()
 

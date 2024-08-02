@@ -343,6 +343,9 @@ const (
 
 	// VirtualMachinePowerStateSuspended is the string representing a VM in suspended state
 	VirtualMachinePowerStateSuspended = VirtualMachinePowerState("suspended")
+
+	// VirtualMachineTransientState is the string representing a VM in transient state
+	VirtualMachineTransientState = VirtualMachinePowerState("transient")
 )
 
 // VirtualMachine represents data about a ics virtual machine object.
