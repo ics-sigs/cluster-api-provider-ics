@@ -19,6 +19,7 @@ package v1beta1
 import (
 	"fmt"
 	"net"
+	"reflect"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -112,6 +113,10 @@ func (r *ICSMachine) ValidateUpdate(old runtime.Object) error {
 				allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "network", fmt.Sprintf("devices[%d]", i), fmt.Sprintf("ipAddrs[%d]", j)), ip, "ip addresses should be in the CIDR format"))
 			}
 		}
+	}
+
+	if !reflect.DeepEqual(oldICSMachineSpec, newICSMachineSpec) {
+		allErrs = append(allErrs, field.Forbidden(field.NewPath("spec"), "cannot be modified"))
 	}
 
 	return aggregateObjErrors(r.GroupVersionKind().GroupKind(), r.Name, allErrs)

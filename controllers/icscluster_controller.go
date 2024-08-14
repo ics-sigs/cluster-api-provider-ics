@@ -60,7 +60,7 @@ var (
 	defaultAPIEndpointPort = int32(6443)
 )
 
-// +kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch;create;patch;update
+// +kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch;create;patch;update;delete
 // +kubebuilder:rbac:groups=core,resources=namespaces,verbs=get;list;watch
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=icsclusters,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=icsclusters/status,verbs=get;update;patch
@@ -407,12 +407,17 @@ func (r clusterReconciler) reconcileICenterConnectivity(ctx *context.ClusterCont
 	}
 
 	iCenter, err := identity.NewClientFromCluster(ctx, r.Client, ctx.ICSCluster)
-	if iCenter.AuthInfo == nil || err != nil {
-		if iCenter.AuthInfo == nil || infrautilv1.IsNotFoundError(err) {
+	if err != nil {
+		if infrautilv1.IsNotFoundError(err) {
 			sessionKey := ctx.ICSCluster.Spec.CloudName
 			return session.Get(ctx, sessionKey)
 		}
 		return nil, err
+	}
+
+	if iCenter == nil || iCenter.AuthInfo == nil {
+		sessionKey := ctx.ICSCluster.Spec.CloudName
+		return session.Get(ctx, sessionKey)
 	}
 
 	params := session.NewParams().

@@ -454,6 +454,10 @@ spec:
                 description: Cluster is the name or inventory path of the cluster
                   in which the virtual machine is created/located.
                 type: string
+              datacenter:
+                description: Datacenter is the name or inventory path of the cluster
+                  in which the virtual machine is created/located.
+                type: string
               datastore:
                 description: Datastore is the name or inventory path of the datastore
                   in which the virtual machine is created/located.
@@ -869,6 +873,10 @@ spec:
                 type: string
               cluster:
                 description: Cluster is the name or inventory path of the cluster
+                  in which the virtual machine is created/located.
+                type: string
+              datacenter:
+                description: Datacenter is the name or inventory path of the cluster
                   in which the virtual machine is created/located.
                 type: string
               datastore:
@@ -1338,6 +1346,10 @@ spec:
                         description: Cluster is the name or inventory path of the
                           cluster in which the virtual machine is created/located.
                         type: string
+                      datacenter:
+                        description: Datacenter is the name or inventory path of the
+                          cluster in which the virtual machine is created/located.
+                        type: string
                       datastore:
                         description: Datastore is the name or inventory path of the
                           datastore in which the virtual machine is created/located.
@@ -1651,6 +1663,10 @@ spec:
                         type: string
                       cluster:
                         description: Cluster is the name or inventory path of the
+                          cluster in which the virtual machine is created/located.
+                        type: string
+                      datacenter:
+                        description: Datacenter is the name or inventory path of the
                           cluster in which the virtual machine is created/located.
                         type: string
                       datastore:
@@ -2045,6 +2061,10 @@ spec:
                 type: string
               cluster:
                 description: Cluster is the name or inventory path of the cluster
+                  in which the virtual machine is created/located.
+                type: string
+              datacenter:
+                description: Datacenter is the name or inventory path of the cluster
                   in which the virtual machine is created/located.
                 type: string
               datastore:
@@ -2516,6 +2536,10 @@ spec:
                 type: string
               cluster:
                 description: Cluster is the name or inventory path of the cluster
+                  in which the virtual machine is created/located.
+                type: string
+              datacenter:
+                description: Datacenter is the name or inventory path of the cluster
                   in which the virtual machine is created/located.
                 type: string
               datastore:

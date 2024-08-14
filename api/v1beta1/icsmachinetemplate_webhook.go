@@ -17,8 +17,6 @@ limitations under the License.
 package v1beta1
 
 import (
-	"reflect"
-
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -57,11 +55,6 @@ func (r *ICSMachineTemplate) ValidateCreate() error {
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type.
 func (r *ICSMachineTemplate) ValidateUpdate(old runtime.Object) error {
-	oldICSMachineTemplate := old.(*ICSMachineTemplate) //nolint:forcetypeassert
-	if !reflect.DeepEqual(r.Spec, oldICSMachineTemplate.Spec) {
-		return field.Forbidden(field.NewPath("spec"), "ICSMachineTemplateSpec is immutable")
-	}
-
 	return nil
 }
 

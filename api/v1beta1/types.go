@@ -91,7 +91,7 @@ type VirtualMachineCloneSpec struct {
 	// Datacenter is the name or inventory path of the cluster in which the
 	// virtual machine is created/located.
 	// +optional
-	Datacenter string `json:"cluster,omitempty"`
+	Datacenter string `json:"datacenter,omitempty"`
 
 	// Cluster is the name or inventory path of the cluster in which the
 	// virtual machine is created/located.

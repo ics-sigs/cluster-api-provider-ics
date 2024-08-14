@@ -22,11 +22,12 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
+
 	infrav1 "github.com/ics-sigs/cluster-api-provider-ics/api/v1beta1"
 	"github.com/ics-sigs/cluster-api-provider-ics/pkg/context"
 	"github.com/ics-sigs/cluster-api-provider-ics/pkg/services/goclient/image"
 	"github.com/ics-sigs/cluster-api-provider-ics/pkg/services/goclient/template"
-	"github.com/pkg/errors"
 
 	infrautilv1 "github.com/ics-sigs/cluster-api-provider-ics/pkg/util"
 	basetypv1 "github.com/ics-sigs/ics-go-sdk/client/types"
@@ -217,6 +218,7 @@ func CloneVM(ctx *context.VMContext, userdata string) error {
 	vmTemplate = *tpl
 	vmTemplate.UUID = uuid.New().String()   // the vm path /sys/class/dmi/id/product_uuid
 	vmTemplate.Name = ctx.ICSVM.Name
+	vmTemplate.VMHostName = ""
 
 	storageService := basestv1.NewStorageService(ctx.GetSession().Client)
 	dataStore, err := storageService.GetStorageInfoByName(ctx, ctx.ICSVM.Spec.Datastore)
