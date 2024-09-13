@@ -19,11 +19,14 @@ package infrastructure
 import (
 	"encoding/base64"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	apitypes "k8s.io/apimachinery/pkg/types"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	"sigs.k8s.io/cluster-api/util/conditions"
 
 	basehstv1 "github.com/ics-sigs/ics-go-sdk/host"
 	basetkv1 "github.com/ics-sigs/ics-go-sdk/task"
@@ -34,6 +37,10 @@ import (
 	basev1 "github.com/ics-sigs/cluster-api-provider-ics/pkg/services/goclient/icenter"
 	"github.com/ics-sigs/cluster-api-provider-ics/pkg/services/goclient/net"
 	infrautilv1 "github.com/ics-sigs/cluster-api-provider-ics/pkg/util"
+)
+
+var (
+	mutex sync.Mutex
 )
 
 // VMService provdes API to interact with the VMs using golang ics sdk
@@ -66,7 +73,7 @@ func (vms *VMService) ReconcileVM(ctx *context.VMContext) (vm infrav1.VirtualMac
 	// Before going further, we need the VM's managed object reference.
 	vmRef, err := findVM(ctx)
 	if err != nil {
-		ctx.Logger.Error(err, "fail to get vm object reference")
+		ctx.Logger.Info("Creating new VM Object", "Name", ctx.ICSVM.Name)
 
 		// Get the bootstrap data.
 		metadata, err := vms.getBootstrapData(ctx)
@@ -77,6 +84,14 @@ func (vms *VMService) ReconcileVM(ctx *context.VMContext) (vm infrav1.VirtualMac
 		if err != nil {
 			ctx.Logger.Error(err, "fail to decode bootstrap data")
 			return vm, err
+		}
+		mutex.Lock()
+		defer mutex.Unlock()
+
+		if vms.isWaitingForStaticIPAllocation(ctx) {
+			conditions.MarkFalse(ctx.ICSVM, infrav1.VMProvisionedCondition, infrav1.WaitingForStaticIPAllocationReason, clusterv1.ConditionSeverityInfo, "")
+			ctx.Logger.Info("vm is waiting for static ip to be available")
+			return vm, errors.New(infrav1.WaitingForNetworkAddressesReason)
 		}
 
 		// Otherwise, this is a new machine and the  the VM should be created.
@@ -336,10 +351,10 @@ func (vms *VMService) getPowerState(ctx *virtualMachineContext) (infrav1.Virtual
 func (vms *VMService) getNetworkStatus(ctx *virtualMachineContext) ([]infrav1.NetworkStatus, error) {
 	allNetStatus, err := net.GetNetworkStatus(&ctx.VMContext, ctx.Session.Client, ctx.Ref)
 	if err != nil {
-		ctx.Logger.Info("got allNetStatus", "err", err)
+		ctx.Logger.Error(err, "got all network status failed")
 		return nil, err
 	}
-	ctx.Logger.Info("got allNetStatus", "status", allNetStatus)
+	//ctx.Logger.Info("got allNetStatus", "status", allNetStatus)
 	apiNetStatus := []infrav1.NetworkStatus{}
 	for _, s := range allNetStatus {
 		apiNetStatus = append(apiNetStatus, infrav1.NetworkStatus{
@@ -373,4 +388,23 @@ func (vms *VMService) getBootstrapData(ctx *context.VMContext) (string, error) {
 	}
 
 	return base64.StdEncoding.EncodeToString(value), nil
+}
+
+// isWaitingForStaticIPAllocation checks whether the VM should wait for a static IP
+// to be allocated.
+// It checks the state of both DHCP4 and DHCP6 for all the network devices and if
+// any static IP addresses are specified.
+func (vms *VMService) isWaitingForStaticIPAllocation(ctx *context.VMContext) bool {
+	devices := ctx.ICSVM.Spec.Network.Devices
+	for _, dev := range devices {
+		if !dev.DHCP4 && !dev.DHCP6 {
+			// Static IP is not available yet
+			ip, _, err := infrautilv1.GetIPFromNetworkConfig(ctx, &dev)
+			if err !=nil || len(*ip) <= 2 {
+				return true
+			}
+		}
+	}
+
+	return false
 }

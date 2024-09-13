@@ -47,7 +47,7 @@ func (s service) Create(ctx *context.ClusterContext, wrapper Wrapper) (string, e
 	}
 	if templateRef.Kind != validMachineTemplate {
 		// since this is a heterogeneous cluster, we should skip cluster module creation for non ICSMachine objects
-		logger.V(4).Info("skipping module creation for object")
+		logger.V(6).Info("skipping module creation for object")
 		return "", nil
 	}
 
@@ -57,7 +57,7 @@ func (s service) Create(ctx *context.ClusterContext, wrapper Wrapper) (string, e
 		return "", err
 	}
 	if server := template.Spec.Template.Spec.CloudName; server != ctx.ICSCluster.Spec.CloudName {
-		logger.V(4).Info("skipping module creation for object since template uses a different server", "server", server)
+		logger.V(6).Info("skipping module creation for object since template uses a different server", "server", server)
 		return "", nil
 	}
 

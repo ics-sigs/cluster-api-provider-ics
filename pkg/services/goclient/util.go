@@ -62,14 +62,13 @@ func findVM(ctx *context.VMContext) (basetypv1.ManagedObjectReference, error) {
 			return basetypv1.ManagedObjectReference{}, err
 		}
 		if objRef == nil {
-			ctx.Logger.Info("vm not found by bios uuid", "biosuuid", biosUUID)
+			ctx.Logger.V(6).Info("vm not found by bios uuid", "biosuuid", biosUUID)
 			return basetypv1.ManagedObjectReference{}, errNotFound{uuid: biosUUID}
 		}
 		reference := basetypv1.ManagedObjectReference{
 			Type:  "id",
 			Value: objRef.ID,
 		}
-		ctx.Logger.Info("vm found by bios uuid", "vmref", reference)
 		return reference, nil
 	}
 
@@ -96,14 +95,12 @@ func findVM(ctx *context.VMContext) (basetypv1.ManagedObjectReference, error) {
 			Type:  "id",
 			Value: vm.ID,
 		}
-		ctx.Logger.Info("vm found by name", "vmref", reference)
 		return reference, nil
 	}
 	reference := basetypv1.ManagedObjectReference{
 		Type:  "id",
 		Value: objRef.ID,
 	}
-	ctx.Logger.Info("vm found by instance uuid", "vmref", reference)
 	return reference, nil
 }
 
@@ -135,8 +132,8 @@ func reconcileInFlightTask(ctx *context.VMContext) (bool, error) {
 	}
 
 	// Otherwise the course of action is determined by the state of the task.
-	logger := ctx.Logger.WithName(task.Id)
-	logger.Info("task found", "state", task.State, "task-id", task.Id)
+	//logger := ctx.Logger.WithName(task.Id)
+	//logger.Info("task found", "state", task.State, "task-id", task.Id)
 	switch task.State {
 	case "WAITING", "RUNNING":
 		return true, nil
@@ -203,7 +200,7 @@ func reconcileICSVMWhenNetworkIsReady(ctx *virtualMachineContext, powerOnTask *b
 func reconcileICSVMOnTaskCompletion(ctx *context.VMContext) {
 	task := getTask(ctx)
 	if task == nil {
-		ctx.Logger.V(4).Info(
+		ctx.Logger.V(6).Info(
 			"skipping reconcile ICSVM on task completion",
 			"reason", "no-task")
 		return
@@ -211,7 +208,7 @@ func reconcileICSVMOnTaskCompletion(ctx *context.VMContext) {
 	taskRef := task.Id
 	taskHelper := basetkv1.NewTaskService(ctx.Session.Client)
 
-	ctx.Logger.Info(
+	ctx.Logger.V(4).Info(
 		"enqueuing reconcile request on task completion",
 		"task-ref", taskRef,
 		"task-name", task.Name,
@@ -259,7 +256,7 @@ func reconcileICSVMOnFuncCompletion(
 		// Once the task has completed (successfully or otherwise), trigger
 		// a reconcile event for the associated resource by sending a
 		// GenericEvent into the event channel for the resource type.
-		ctx.Logger.Info("triggering GenericEvent", loggerKeysAndValues...)
+		ctx.Logger.V(6).Info("triggering GenericEvent", loggerKeysAndValues...)
 		eventChannel := ctx.GetGenericEventChannelFor(gvk)
 		eventChannel <- event.GenericEvent{
 			Object: obj,

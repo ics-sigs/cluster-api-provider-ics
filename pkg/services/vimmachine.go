@@ -402,12 +402,12 @@ func (v *VimMachineService) createOrPatchICSVM(ctx *context.VIMMachineContext, i
 		return nil, err
 	}
 	switch result {
-	case ctrlutil.OperationResultNone:
-		ctx.Logger.Info(
-			"no update required for vm",
-			"vm",
-			vmKey,
-		)
+	//case ctrlutil.OperationResultNone:
+	//	ctx.Logger.Info(
+	//		"no update required for vm",
+	//		"vm",
+	//		vmKey,
+	//	)
 	case ctrlutil.OperationResultCreated:
 		ctx.Logger.Info(
 			"created vm",

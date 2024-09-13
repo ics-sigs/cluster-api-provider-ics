@@ -22,12 +22,11 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
-
 	infrav1 "github.com/ics-sigs/cluster-api-provider-ics/api/v1beta1"
 	"github.com/ics-sigs/cluster-api-provider-ics/pkg/context"
 	"github.com/ics-sigs/cluster-api-provider-ics/pkg/services/goclient/image"
 	"github.com/ics-sigs/cluster-api-provider-ics/pkg/services/goclient/template"
+	"github.com/pkg/errors"
 
 	infrautilv1 "github.com/ics-sigs/cluster-api-provider-ics/pkg/util"
 	basetypv1 "github.com/ics-sigs/ics-go-sdk/client/types"
@@ -514,6 +513,8 @@ func UpdateNicIPConfig(ctx *context.VMContext, netSpec *basetypv1.Nic, deviceSpe
 	// Check to see if the IP is in the list of the device
 	// spec's static IP addresses.
 	allocatedIPMu.Lock()
+	defer allocatedIPMu.Unlock()
+
 	ip, netmask, err := infrautilv1.GetIPFromNetworkConfig(ctx, deviceSpec)
 	if err == nil {
 		netSpec.Dhcp = false
@@ -531,7 +532,6 @@ func UpdateNicIPConfig(ctx *context.VMContext, netSpec *basetypv1.Nic, deviceSpe
 	} else {
 		ctx.Logger.Error(err, "fail to get ip and netmask for the icsvm")
 	}
-	allocatedIPMu.Unlock()
 }
 
 func getAvailableHosts(ctx *context.VMContext,

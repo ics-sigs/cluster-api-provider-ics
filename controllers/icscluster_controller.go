@@ -109,7 +109,7 @@ func AddClusterControllerToManager(ctx *context.ControllerManagerContext, mgr ma
 				}
 
 				if annotations.IsExternallyManaged(c) {
-					reconciler.Logger.V(4).Info("ICSCluster is externally managed, skipping mapping.")
+					reconciler.Logger.V(6).Info("ICSCluster is externally managed, skipping mapping.")
 					return nil
 				}
 				return requests
@@ -475,7 +475,7 @@ func (r clusterReconciler) reconcileControlPlaneEndpoint(ctx *context.ClusterCon
 			ctx.ICSCluster.Spec.ControlPlaneEndpoint.Host = ctx.Cluster.Spec.ControlPlaneEndpoint.Host
 			ctx.ICSCluster.Spec.ControlPlaneEndpoint.Port = ctx.Cluster.Spec.ControlPlaneEndpoint.Port
 			conditions.MarkTrue(ctx.ICSCluster, infrav1.LoadBalancerReadyCondition)
-			ctx.Logger.Info("skipping control plane endpoint reconciliation",
+			ctx.Logger.V(6).Info("skipping control plane endpoint reconciliation",
 				"reason", "ControlPlaneEndpoint already set on Cluster",
 				"controlPlaneEndpoint", ctx.Cluster.Spec.ControlPlaneEndpoint.String())
 			return true, nil
@@ -483,7 +483,7 @@ func (r clusterReconciler) reconcileControlPlaneEndpoint(ctx *context.ClusterCon
 
 		if !ctx.ICSCluster.Spec.ControlPlaneEndpoint.IsZero() {
 			conditions.MarkTrue(ctx.ICSCluster, infrav1.LoadBalancerReadyCondition)
-			ctx.Logger.Info("skipping control plane endpoint reconciliation",
+			ctx.Logger.V(6).Info("skipping control plane endpoint reconciliation",
 				"reason", "ControlPlaneEndpoint already set on icsCluster",
 				"controlPlaneEndpoint", ctx.ICSCluster.Spec.ControlPlaneEndpoint.String())
 			return true, nil
@@ -524,7 +524,7 @@ func (r clusterReconciler) reconcileControlPlaneEndpoint(ctx *context.ClusterCon
 		// Only machines with bootstrap data will have an IP address.
 		if machine == nil || machine.Spec.Bootstrap.DataSecretName == nil {
 			if machine != nil {
-				ctx.Logger.V(5).Info(
+				ctx.Logger.V(6).Info(
 					"skipping machine while looking for IP address",
 					"reason", "bootstrap.DataSecretName is nil",
 					"machine-name", machine.Name)
@@ -626,23 +626,23 @@ var (
 
 func (r clusterReconciler) reconcileICSClusterWhenAPIServerIsOnline(ctx *context.ClusterContext) {
 	if conditions.IsTrue(ctx.Cluster, clusterv1.ControlPlaneInitializedCondition) {
-		ctx.Logger.Info("skipping reconcile when API server is online",
-			"reason", "controlPlaneInitialized")
+		//ctx.Logger.Info("skipping reconcile when API server is online",
+		//	"reason", "controlPlaneInitialized")
 		return
 	}
 	apiServerTriggersMu.Lock()
 	defer apiServerTriggersMu.Unlock()
 	if _, ok := apiServerTriggers[ctx.Cluster.UID]; ok {
-		ctx.Logger.Info("skipping reconcile when API server is online",
-			"reason", "alreadyPolling")
+		//ctx.Logger.Info("skipping reconcile when API server is online",
+		//	"reason", "alreadyPolling")
 		return
 	}
 	apiServerTriggers[ctx.Cluster.UID] = struct{}{}
 	go func() {
 		// Block until the target API server is online.
-		ctx.Logger.Info("start polling API server for online check")
+		ctx.Logger.V(6).Info("start polling API server for online check")
 		wait.PollImmediateInfinite(time.Second * 1, func() (bool, error) { return r.isAPIServerOnline(ctx), nil }) // nolint:errcheck
-		ctx.Logger.Info("stop polling API server for online check")
+		ctx.Logger.V(6).Info("stop polling API server for online check")
 		ctx.Logger.Info("triggering GenericEvent", "reason", "api-server-online")
 		eventChannel := ctx.GetGenericEventChannelFor(ctx.ICSCluster.GetObjectKind().GroupVersionKind())
 		eventChannel <- event.GenericEvent{
@@ -652,9 +652,9 @@ func (r clusterReconciler) reconcileICSClusterWhenAPIServerIsOnline(ctx *context
 		// Once the control plane has been marked as initialized it is safe to
 		// remove the key from the map that prevents multiple goroutines from
 		// polling the API server to see if it is online.
-		ctx.Logger.Info("start polling for control plane initialized")
+		ctx.Logger.V(6).Info("start polling for control plane initialized")
 		wait.PollImmediateInfinite(time.Second * 1, func() (bool, error) { return r.isControlPlaneInitialized(ctx), nil }) // nolint:errcheck
-		ctx.Logger.Info("stop polling for control plane initialized")
+		ctx.Logger.V(6).Info("stop polling for control plane initialized")
 		apiServerTriggersMu.Lock()
 		delete(apiServerTriggers, ctx.Cluster.UID)
 		apiServerTriggersMu.Unlock()
@@ -678,7 +678,7 @@ func (r clusterReconciler) isAPIServerOnline(ctx *context.ClusterContext) bool {
 				cluster.Spec.ControlPlaneEndpoint.Port = ctx.ICSCluster.Spec.ControlPlaneEndpoint.Port
 				ctx.Logger.Error(err, "failed to get updated cluster object while checking if API server is online")
 			}
-			ctx.Logger.Info(
+			ctx.Logger.V(6).Info(
 				"API server is online",
 				"controlPlaneEndpoint", cluster.Spec.ControlPlaneEndpoint.String())
 			return true
@@ -705,9 +705,9 @@ func (r clusterReconciler) syncCustomKubeConfig(ctx *context.ClusterContext) {
 			if err != nil {
 				klog.Errorf("failed to update customer cluster info %s/%s", ctx.ICSCluster.Namespace, ctx.ICSCluster.Name)
 				syncCustom = false
-			} else {
-				ctx.Logger.Info("Sync custom cluster kubeconfig success",
-					"Namespace", ctx.ICSCluster.Namespace, "Name", ctx.ICSCluster.Name)
+			//} else {
+			//	ctx.Logger.Info("Sync custom cluster kubeconfig success",
+			//		"Namespace", ctx.ICSCluster.Namespace, "Name", ctx.ICSCluster.Name)
 			}
 			kubeadmConfig, err := kubeClient.CoreV1().ConfigMaps("kube-system").Get(ctx, "kubeadm-config", metav1.GetOptions{})
 			if err == nil {
@@ -755,7 +755,7 @@ func (r clusterReconciler) isControlPlaneInitialized(ctx *context.ClusterContext
 			ctx.Logger.Error(err, "failed to get updated cluster object while checking if control plane is initialized")
 			return false
 		}
-		ctx.Logger.Info("exiting early because cluster no longer exists")
+		ctx.Logger.V(6).Info("exiting early because cluster no longer exists")
 		return true
 	}
 	return conditions.IsTrue(ctx.Cluster, clusterv1.ControlPlaneInitializedCondition)

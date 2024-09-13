@@ -333,24 +333,20 @@ func (r vmReconciler) reconcileNormal(ctx *context.VMContext, icsMachine *infrav
 
 	// Implement selection of VM service based on ICS version
 	var vmService services.VirtualMachineService = &basev1.VMService{}
-
-	if r.isWaitingForStaticIPAllocation(ctx) {
-		conditions.MarkFalse(ctx.ICSVM, infrav1.VMProvisionedCondition, infrav1.WaitingForStaticIPAllocationReason, clusterv1.ConditionSeverityInfo, "")
-		ctx.Logger.Info("vm is waiting for static ip to be available")
-		return reconcile.Result{}, nil
-	}
-
 	// Get or create the VM.
 	vm, err := vmService.ReconcileVM(ctx)
 	if err != nil {
-		if err != nil && err.Error() == infrav1.PoweringOnFailedReason {
-			var vmService services.VirtualMachineService = &basev1.VMService{}
-			_, _ = vmService.DestroyVM(ctx)
-			_ = r.reconcileIPAddressesDelete(ctx)
-			ctx.ICSVM.Spec.UID = ""
-			ctx.ICSVM.Spec.BiosUUID = ""
+		if err != nil {
+			if err.Error() == infrav1.PoweringOnFailedReason {
+				var vmService services.VirtualMachineService = &basev1.VMService{}
+				_, _ = vmService.DestroyVM(ctx)
+				_ = r.reconcileIPAddressesDelete(ctx)
+				ctx.ICSVM.Spec.UID = ""
+				ctx.ICSVM.Spec.BiosUUID = ""
+			} else if err.Error() == infrav1.WaitingForNetworkAddressesReason {
+				return reconcile.Result{}, nil
+			}
 		}
-		ctx.Logger.Error(err, "error reconciling VM")
 		return reconcile.Result{}, errors.Wrapf(err, "failed to reconcile VM")
 	}
 
@@ -364,7 +360,7 @@ func (r vmReconciler) reconcileNormal(ctx *context.VMContext, icsMachine *infrav
 	}
 
 	// Update the ICSVM's BIOS UUID.
-	ctx.Logger.Info("vm bios-uuid", "biosuuid", vm.BiosUUID)
+	//ctx.Logger.Info("vm bios-uuid", "biosuuid", vm.BiosUUID)
 
 	// defensive check to ensure we are not removing the biosUUID
 	if vm.BiosUUID != "" {
@@ -387,22 +383,6 @@ func (r vmReconciler) reconcileNormal(ctx *context.VMContext, icsMachine *infrav
 	ctx.Logger.Info("ICSVM is ready")
 
 	return reconcile.Result{}, nil
-}
-
-// isWaitingForStaticIPAllocation checks whether the VM should wait for a static IP
-// to be allocated.
-// It checks the state of both DHCP4 and DHCP6 for all the network devices and if
-// any static IP addresses are specified.
-func (r vmReconciler) isWaitingForStaticIPAllocation(ctx *context.VMContext) bool {
-	devices := ctx.ICSVM.Spec.Network.Devices
-	for _, dev := range devices {
-		if !dev.DHCP4 && !dev.DHCP6 && len(dev.IPAddrs) == 0 {
-			// Static IP is not available yet
-			return true
-		}
-	}
-
-	return false
 }
 
 func (r vmReconciler) reconcileNetwork(ctx *context.VMContext, vm infrav1.VirtualMachine) {
@@ -497,6 +477,10 @@ func (r vmReconciler) reconcileICenterConnectivity(ctx *context.VMContext) (*ses
 			return session.Get(ctx, sessionKey)
 		}
 		return nil, err
+	}
+	if iCenter == nil || iCenter.AuthInfo == nil {
+		sessionKey := ctx.ICSVM.Spec.CloudName
+		return session.Get(ctx, sessionKey)
 	}
 
 	params := session.NewParams().
