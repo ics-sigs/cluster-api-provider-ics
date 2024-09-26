@@ -336,16 +336,16 @@ func (r vmReconciler) reconcileNormal(ctx *context.VMContext, icsMachine *infrav
 	// Get or create the VM.
 	vm, err := vmService.ReconcileVM(ctx)
 	if err != nil {
-		if err != nil {
-			if err.Error() == infrav1.PoweringOnFailedReason {
-				var vmService services.VirtualMachineService = &basev1.VMService{}
-				_, _ = vmService.DestroyVM(ctx)
-				_ = r.reconcileIPAddressesDelete(ctx)
-				ctx.ICSVM.Spec.UID = ""
-				ctx.ICSVM.Spec.BiosUUID = ""
-			} else if err.Error() == infrav1.WaitingForNetworkAddressesReason {
-				return reconcile.Result{}, nil
-			}
+		if err.Error() == infrav1.PoweringOnFailedReason {
+			var vmService services.VirtualMachineService = &basev1.VMService{}
+			_, _ = vmService.DestroyVM(ctx)
+			_ = r.reconcileIPAddressesDelete(ctx)
+			ctx.ICSVM.Spec.UID = ""
+			ctx.ICSVM.Spec.BiosUUID = ""
+		} else if err.Error() == infrav1.WaitingForNetworkAddressesReason {
+			return reconcile.Result{}, nil
+		} else if err.Error() == infrav1.ICSAPIRequestFailedReason {
+			return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 		}
 		return reconcile.Result{}, errors.Wrapf(err, "failed to reconcile VM")
 	}

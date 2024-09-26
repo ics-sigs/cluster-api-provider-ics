@@ -73,30 +73,34 @@ func (vms *VMService) ReconcileVM(ctx *context.VMContext) (vm infrav1.VirtualMac
 	// Before going further, we need the VM's managed object reference.
 	vmRef, err := findVM(ctx)
 	if err != nil {
-		ctx.Logger.Info("Creating new VM Object", "Name", ctx.ICSVM.Name)
+		if isNotFound(err) {
+			ctx.Logger.Info("Try to creating new VM Object", "Name", ctx.ICSVM.Name)
 
-		// Get the bootstrap data.
-		metadata, err := vms.getBootstrapData(ctx)
-		if err != nil {
-			return vm, err
-		}
-		metadataBytes, err := base64.StdEncoding.DecodeString(metadata)
-		if err != nil {
-			ctx.Logger.Error(err, "fail to decode bootstrap data")
-			return vm, err
-		}
-		mutex.Lock()
-		defer mutex.Unlock()
+			// Get the bootstrap data.
+			metadata, err := vms.getBootstrapData(ctx)
+			if err != nil {
+				return vm, err
+			}
+			metadataBytes, err := base64.StdEncoding.DecodeString(metadata)
+			if err != nil {
+				ctx.Logger.Error(err, "fail to decode bootstrap data")
+				return vm, err
+			}
+			mutex.Lock()
+			defer mutex.Unlock()
 
-		if vms.isWaitingForStaticIPAllocation(ctx) {
-			conditions.MarkFalse(ctx.ICSVM, infrav1.VMProvisionedCondition, infrav1.WaitingForStaticIPAllocationReason, clusterv1.ConditionSeverityInfo, "")
-			ctx.Logger.Info("vm is waiting for static ip to be available")
-			return vm, errors.New(infrav1.WaitingForNetworkAddressesReason)
-		}
+			if vms.isWaitingForStaticIPAllocation(ctx) {
+				conditions.MarkFalse(ctx.ICSVM, infrav1.VMProvisionedCondition, infrav1.WaitingForStaticIPAllocationReason, clusterv1.ConditionSeverityInfo, "")
+				ctx.Logger.Info("vm is waiting for static ip to be available")
+				return vm, errors.New(infrav1.WaitingForNetworkAddressesReason)
+			}
 
-		// Otherwise, this is a new machine and the  the VM should be created.
-		// Create the VM.
-		return vm, basev1.CreateVM(ctx, string(metadataBytes))
+			// Otherwise, this is a new machine and the  the VM should be created.
+			// Create the VM.
+			return vm, basev1.CreateVM(ctx, string(metadataBytes))
+		} else {
+			return vm, errors.New(infrav1.ICSAPIRequestFailedReason)
+		}
 	}
 
 	// At this point we know the VM exists, so it needs to be updated.

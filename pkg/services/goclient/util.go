@@ -57,19 +57,17 @@ func sanitizeIPAddrs(ctx *context.VMContext, ipAddrs []string) []string {
 func findVM(ctx *context.VMContext) (basetypv1.ManagedObjectReference, error) {
 	virtualMachineService := basevmv1.NewVirtualMachineService(ctx.Session.Client)
 	if biosUUID := ctx.ICSVM.Spec.BiosUUID; biosUUID != "" {
-		objRef, err := virtualMachineService.GetVMByUUID(ctx, biosUUID)
+		vmObj, err := virtualMachineService.GetVMByUUID(ctx, biosUUID)
 		if err != nil {
 			return basetypv1.ManagedObjectReference{}, err
 		}
-		if objRef == nil {
-			ctx.Logger.V(6).Info("vm not found by bios uuid", "biosuuid", biosUUID)
-			return basetypv1.ManagedObjectReference{}, errNotFound{uuid: biosUUID}
+		if vmObj != nil && vmObj.ID != "" {
+			reference := basetypv1.ManagedObjectReference{
+				Type:  "id",
+				Value: vmObj.ID,
+			}
+			return reference, nil
 		}
-		reference := basetypv1.ManagedObjectReference{
-			Type:  "id",
-			Value: objRef.ID,
-		}
-		return reference, nil
 	}
 
 	objRef := &basetypv1.VirtualMachine{}
@@ -77,31 +75,32 @@ func findVM(ctx *context.VMContext) (basetypv1.ManagedObjectReference, error) {
 	if instanceUUID != "" {
 		vmObj, err := virtualMachineService.GetVM(ctx, instanceUUID)
 		if err != nil {
-			ctx.Logger.Error(err, "fail to get vm by vm UUD")
+			ctx.Logger.Error(err, ", fail to get vm by vm UUD")
 		}
-		objRef = vmObj
+		if vmObj != nil && vmObj.ID != "" {
+			reference := basetypv1.ManagedObjectReference{
+				Type:  "id",
+				Value: vmObj.ID,
+			}
+			return reference, nil
+		}
 	} else {
 		objRef = nil
 	}
 	if objRef == nil || objRef.ID == "" {
-		vm, err := virtualMachineService.GetVMByName(ctx, ctx.ICSVM.Name)
+		vmObj, err := virtualMachineService.GetVMByName(ctx, ctx.ICSVM.Name)
 		if err != nil {
-			return basetypv1.ManagedObjectReference{}, errNotFound{byInventoryPath: ctx.ICSVM.Name}
+			return basetypv1.ManagedObjectReference{}, err
 		}
-		if vm == nil || vm.ID == "" {
-			return basetypv1.ManagedObjectReference{}, errNotFound{byInventoryPath: ctx.ICSVM.Name}
+		if vmObj != nil && vmObj.ID != "" {
+			reference := basetypv1.ManagedObjectReference{
+				Type:  "id",
+				Value: vmObj.ID,
+			}
+			return reference, nil
 		}
-		reference := basetypv1.ManagedObjectReference{
-			Type:  "id",
-			Value: vm.ID,
-		}
-		return reference, nil
 	}
-	reference := basetypv1.ManagedObjectReference{
-		Type:  "id",
-		Value: objRef.ID,
-	}
-	return reference, nil
+	return basetypv1.ManagedObjectReference{}, errNotFound{byInventoryPath: ctx.ICSVM.Name}
 }
 
 func getTask(ctx *context.VMContext) *basetypv1.TaskInfo {

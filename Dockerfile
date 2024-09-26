@@ -1,5 +1,6 @@
 # Build the manager binary
 # syntax=docker/dockerfile:experimental
+# ARG GOLANG_VERSION=golang:1.17.6
 ARG GOLANG_VERSION=localhost:5000/golang:1.17.6
 FROM --platform=${BUILDPLATFORM} ${GOLANG_VERSION} as builder
 WORKDIR /workspace
@@ -29,6 +30,7 @@ RUN --mount=type=bind,target=. \
     -o /out/manager .
 
 # Copy the controller-manager into a thin image
+# gcr.io/distroless/static:nonroot
 ARG TARGETPLATFORM
 FROM --platform=${TARGETPLATFORM} localhost:5000/distroless/static:nonroot
 WORKDIR /

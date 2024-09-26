@@ -221,7 +221,7 @@ func CloneVM(ctx *context.VMContext, userdata string) error {
 
 	storageService := basestv1.NewStorageService(ctx.GetSession().Client)
 	dataStore, err := storageService.GetStorageInfoByName(ctx, ctx.ICSVM.Spec.Datastore)
-	if err != nil {
+	if err != nil || dataStore == nil {
 		ctx.Logger.Error(err, "fail to find the data store from ics")
 		return errors.Wrapf(err, "unable to get DataStore for %q", ctx)
 	}
@@ -231,7 +231,7 @@ func CloneVM(ctx *context.VMContext, userdata string) error {
 	for index, device := range ctx.ICSVM.Spec.Network.Devices {
 		if device.SwitchType == NormalSwitchType || device.SwitchType == LocalSDNSwitchType {
 			network, err := networkService.GetNetworkByName(ctx, device.NetworkName)
-			if err != nil {
+			if err != nil || network == nil {
 				ctx.Logger.Error(err, "fail to find the network devices from ics")
 				return errors.Wrapf(err, "unable to get networks for %q", ctx)
 			}

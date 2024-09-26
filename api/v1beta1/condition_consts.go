@@ -71,6 +71,8 @@ const (
 
 	// TagsAttachmentFailedReason (Severity=Error) documents a ICSMachine/ICSVM tags attachment failure.
 	TagsAttachmentFailedReason = "TagsAttachmentFailed"
+
+	ICSAPIRequestFailedReason = "APIRequestFailedReason"
 )
 
 // Conditions and Reasons related to utilizing a ICSIdentity to make connections to a ICenter.
