@@ -85,6 +85,7 @@ const (
 	// ICenterUnreachableReason (Severity=Error) documents a controller detecting
 	// issues with ICenter reachability.
 	ICenterUnreachableReason = "ICenterUnreachable"
+	ICenterAuthenticationFailed = "ICenterAuthenticationFailed"
 )
 
 const (

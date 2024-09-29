@@ -34,10 +34,16 @@ import (
 	infrav1 "github.com/ics-sigs/cluster-api-provider-ics/api/v1beta1"
 )
 
+var retryAuthCache sync.Map
 // global Session map against sessionKeys
 // in map[sessionKey]Session.
 var sessionCache sync.Map
 var schemeMatch = regexp.MustCompile(`^\w+://`)
+
+type AuthStatus struct {
+	RepeatTimes  int32
+	LoginAt      time.Time
+}
 
 // Session is a ICS session with a configured Finder.
 type Session struct {
@@ -107,6 +113,35 @@ func (p *Params) WithAPIVersion(apiVersion string) *Params {
 func (p *Params) WithFeatures(feature Feature) *Params {
 	p.feature = feature
 	return p
+}
+
+func checkICenterAuthStatus(key string) bool {
+	var result = true
+	if cache, ok := retryAuthCache.Load(key); ok {
+		a := cache.(*AuthStatus)
+		if time.Now().Before(a.LoginAt.Add(6 * time.Minute)) && a.RepeatTimes >= 2 {
+			result = false
+		}
+	}
+	return result
+}
+
+func updateICenterAuthStatus(key string) {
+	if cache, ok := retryAuthCache.Load(key); ok {
+		a := cache.(*AuthStatus)
+		if time.Now().After(a.LoginAt.Add(6 * time.Minute)) {
+			a.RepeatTimes = 1
+		} else {
+			a.RepeatTimes++
+		}
+		a.LoginAt = time.Now()
+	} else {
+		status := AuthStatus{
+			RepeatTimes: 1,
+			LoginAt: time.Now(),
+		}
+		retryAuthCache.Store(key, &status)
+	}
 }
 
 // GetOrCreate gets a cached session or creates a new one if one does not
@@ -209,11 +244,19 @@ func newClient(ctx context.Context, logger logr.Logger, url *url.URL,) (*basegov
 		Insecure: true,
 		Port:     url.Port(),
 	}
+	var key = url.Host + ":" + c.Username
+	if !checkICenterAuthStatus(key) {
+		err := errors.New("The client is invoking the interface too frequently")
+		//logger.Error(err, "skipping login api")
+		return nil, err
+	}
 
 	if err := c.Connect(ctx); err != nil {
 		logger.Error(err, "failed to new ICenter client", "server", url.Host)
-		return nil, errors.Wrapf(err, "error setting up new ICenter client")
+		updateICenterAuthStatus(key)
+		return nil, errors.New(infrav1.ICenterAuthenticationFailed)
 	}
+	retryAuthCache.Delete(key)
 
 	return c, nil
 }
