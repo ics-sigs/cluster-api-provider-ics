@@ -50,7 +50,7 @@ const (
 
 	NormalSwitchType string = "NORMALSWITCH"
 	LocalSDNSwitchType string = "SDNSWITCH"
-	ExtSDNSwitchType string = "VXLANOPENSTACKSWITCH"
+	ExtSDNSwitchType string = "VLANOPENSTACKSWITCH"
 	SDNDeviceType string = "ADVANCEDNETWORK"
 	NormalDeviceType string = "NETWORK"
 )
