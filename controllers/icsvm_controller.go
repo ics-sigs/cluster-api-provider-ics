@@ -336,7 +336,7 @@ func (r vmReconciler) reconcileNormal(ctx *context.VMContext, icsMachine *infrav
 	// Get or create the VM.
 	vm, err := vmService.ReconcileVM(ctx)
 	if err != nil {
-		if err.Error() == infrav1.PoweringOnFailedReason {
+		if err.Error() == infrav1.PoweringOnFailedReason && len(ctx.ICSVM.Status.Addresses) == 0 {
 			var vmService services.VirtualMachineService = &basev1.VMService{}
 			_, _ = vmService.DestroyVM(ctx)
 			_ = r.reconcileIPAddressesDelete(ctx)
