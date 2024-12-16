@@ -92,7 +92,12 @@ func GetNetworkStatus(
 			isStatic = true
 			break
 		}
+
 		if isStatic {
+			isChanged := false
+			// Debug, update vms
+			//klog.Infof("DavidWang# K8S ICSVM [%s] Nics: %+v", ctx.ICSVM.Name, ctx.ICSVM.Spec.Network.Devices)
+			//klog.Infof("DavidWang# current VM [%s] Nics: %+v", vm.Name, vm.Nics)
 			for index := 1; index < len(nicDevices); index++ {
 				device := nicDevices[index]
 				if device.DHCP4 || device.DHCP6 {
@@ -100,17 +105,22 @@ func GetNetworkStatus(
 				}
 				nic := &vm.Nics[index]
 				if !nic.StaticIp {
-					icenter.UpdateNicIPConfig(ctx, nic, &nicDevices[index])
+					result := icenter.UpdateNicIPConfig(ctx, nic, &nicDevices[index])
+					if !isChanged && result {
+						isChanged = true
+					}
 					vm.Nics[index] = *nic
 				}
 			}
-			task, err := virtualMachineService.SetVM(ctx, *vm)
-			if err != nil {
-				ctx.Logger.Error(err, "failed to set static ips for vm nics", "id", moRef)
-			} else {
-				// Wait for the VM to be edited.
-				taskService := basetkv1.NewTaskService(ctx.Session.Client)
-				_, _ = taskService.WaitForResult(ctx, task)
+			if isChanged {
+				task, err := virtualMachineService.SetVM(ctx, *vm)
+				if err != nil {
+					ctx.Logger.Error(err, "failed to set static ips for vm nics", "id", moRef)
+				} else {
+					// Wait for the VM to be edited.
+					taskService := basetkv1.NewTaskService(ctx.Session.Client)
+					_, _ = taskService.WaitForResult(ctx, task)
+				}
 			}
 		}
 	}

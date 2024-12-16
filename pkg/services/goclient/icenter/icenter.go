@@ -451,6 +451,8 @@ func getNetworkSpecs(ctx *context.VMContext, devices []basetypv1.Nic,
 			} else {
 				if index == 0 {
 					UpdateNicIPConfig(ctx, &nic, &netSpec)
+				} else {
+					nic.Dhcp = true
 				}
 			}
 		}
@@ -472,10 +474,7 @@ func getNetworkSpecs(ctx *context.VMContext, devices []basetypv1.Nic,
 			}
 			netSpec.NetworkID = network.ID
 			netSpec.SwitchType = network.VswitchDto.SwitchType
-			deviceSpec := &ctx.ICSVM.Spec.Network.Devices[index]
-			if deviceSpec.DHCP4 || deviceSpec.DHCP6 {
-				netSpec.Dhcp = true
-			}
+			netSpec.Dhcp = true
 			deviceSpecs = append(deviceSpecs, netSpec)
 		}
 	}
@@ -509,14 +508,14 @@ func initNic() basetypv1.Nic {
 	return nic
 }
 
-func UpdateNicIPConfig(ctx *context.VMContext, netSpec *basetypv1.Nic, deviceSpec *infrav1.NetworkDeviceSpec) {
+func UpdateNicIPConfig(ctx *context.VMContext, netSpec *basetypv1.Nic, deviceSpec *infrav1.NetworkDeviceSpec) bool {
 	// Check to see if the IP is in the list of the device
 	// spec's static IP addresses.
 	allocatedIPMu.Lock()
 	defer allocatedIPMu.Unlock()
 
 	ip, netmask, err := infrautilv1.GetIPFromNetworkConfig(ctx, deviceSpec)
-	if err == nil {
+	if err == nil && ip != nil && len(*ip) > 4 {
 		netSpec.Dhcp = false
 		netSpec.IP = *ip
 		netSpec.Netmask = *netmask
@@ -528,9 +527,12 @@ func UpdateNicIPConfig(ctx *context.VMContext, netSpec *basetypv1.Nic, deviceSpe
 		_, err := infrautilv1.CreateOrUpdateIPAddress(ctx, *ip, *netSpec)
 		if err != nil {
 			ctx.Logger.Error(err, "fail to create ipAddress for the icsvm")
+			return false
 		}
+		return true
 	} else {
 		ctx.Logger.Error(err, "fail to get ip and netmask for the icsvm")
+		return false
 	}
 }
 

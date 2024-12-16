@@ -396,6 +396,12 @@ docker-build: ## Build the docker image for controller-manager
     		--pull --build-arg ldflags="$(LDFLAGS)" \
     		-t $(RELEASE_CONTROLLER_IMG):$(VERSION) .
 
+.PHONY: docker-build-arm
+docker-build-arm: ## Build the docker image for controller-manager
+	DOCKER_BUILDKIT=1 docker buildx build --platform linux/arm64 --output=type=docker \
+    		--pull --build-arg ldflags="$(LDFLAGS)" \
+    		-t $(RELEASE_CONTROLLER_IMG):$(VERSION) .
+
 .PHONY: docker-push
 docker-push: ## Push the docker image
 	docker buildx inspect capics &>/dev/null || docker buildx create --name capics
