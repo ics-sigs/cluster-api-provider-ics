@@ -206,6 +206,8 @@ func (vms *VMService) DestroyVM(ctx *context.VMContext) (infrav1.VirtualMachine,
 }
 
 func (vms *VMService) reconcileNetworkStatus(ctx *virtualMachineContext) error {
+	mutex.Lock()
+	defer mutex.Unlock()
 	netStatus, err := vms.getNetworkStatus(ctx)
 	if err != nil {
 		return err
@@ -235,11 +237,13 @@ func (vms *VMService) reconcilePowerState(ctx *virtualMachineContext) (bool, err
 		ctx.Logger.Info("powering on")
 		vm, err := ctx.Obj.GetVM(ctx, ctx.Ref.Value)
 		if err != nil {
+			infrautilv1.AddICSErrorAnnotations(ctx.ICSVM, err)
 			return false, nil
 		}
 		hostService := basehstv1.NewHostService(ctx.Session.Client)
 		host, err := hostService.GetHost(ctx, vm.HostID)
 		if err != nil {
+			infrautilv1.AddICSErrorAnnotations(ctx.ICSVM, err)
 			return false, nil
 		}
 		if vm.MemoryInByte >= host.FreeMemoryInByte || vm.MemoryInByte >= host.LogicFreeMemoryInByte {
@@ -247,6 +251,7 @@ func (vms *VMService) reconcilePowerState(ctx *virtualMachineContext) (bool, err
 		}
 		task, err := ctx.Obj.PowerOnVM(ctx, ctx.Ref.Value)
 		if err != nil {
+			infrautilv1.AddICSErrorAnnotations(ctx.ICSVM, err)
 			return false, errors.Wrapf(err, "failed to trigger power on op for vm %s", ctx)
 		}
 
@@ -260,6 +265,12 @@ func (vms *VMService) reconcilePowerState(ctx *virtualMachineContext) (bool, err
 		taskService := basetkv1.NewTaskService(ctx.Session.Client)
 		taskInfo, _ := taskService.WaitForResult(ctx, task)
 		if taskInfo != nil && taskInfo.State == "ERROR" {
+			annotations := ctx.ICSVM.ObjectMeta.GetAnnotations()
+			if annotations == nil {
+				annotations = make(map[string]string)
+			}
+			annotations[infrautilv1.AnnotationICSVMErrorCode] = taskInfo.Error
+			annotations[infrautilv1.AnnotationICSVMErrorMessage] = taskInfo.ErrorCode
 			ctx.Logger.Error(errors.New(taskInfo.Error), "failed to trigger power on the vm")
 			return false, errors.New(infrav1.PoweringOnFailedReason)
 		} else {

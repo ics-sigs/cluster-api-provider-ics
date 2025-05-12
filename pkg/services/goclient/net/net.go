@@ -61,6 +61,7 @@ func GetNetworkStatus(
 	virtualMachineService := basevmv1.NewVirtualMachineService(client)
 	vm, err := virtualMachineService.GetVM(ctx, moRef.Value)
 	if err != nil {
+		infrautilv1.AddICSErrorAnnotations(ctx.ICSVM, err)
 		ctx.Logger.Error(err, "vm GetNetworkStatus err", "id", moRef)
 		return nil, errors.Wrapf(err, "unable to get vm info, for vm %v", moRef)
 	}
@@ -115,11 +116,21 @@ func GetNetworkStatus(
 			if isChanged {
 				task, err := virtualMachineService.SetVM(ctx, *vm)
 				if err != nil {
+					infrautilv1.AddICSErrorAnnotations(ctx.ICSVM, err)
 					ctx.Logger.Error(err, "failed to set static ips for vm nics", "id", moRef)
 				} else {
 					// Wait for the VM to be edited.
 					taskService := basetkv1.NewTaskService(ctx.Session.Client)
-					_, _ = taskService.WaitForResult(ctx, task)
+					taskInfo, _ := taskService.WaitForResult(ctx, task)
+					if taskInfo != nil && taskInfo.State == "ERROR" {
+						annotations := ctx.ICSVM.ObjectMeta.GetAnnotations()
+						if annotations == nil {
+							annotations = make(map[string]string)
+						}
+						annotations[infrautilv1.AnnotationICSVMErrorCode] = taskInfo.Error
+						annotations[infrautilv1.AnnotationICSVMErrorMessage] = taskInfo.ErrorCode
+						ctx.ICSVM.ObjectMeta.SetAnnotations(annotations)
+					}
 				}
 			}
 		}

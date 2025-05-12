@@ -16,6 +16,13 @@ limitations under the License.
 
 package util
 
+const (
+	AnnotationICSVMErrorCode = "capics.infrastructure.cluster.x-k8s.io/vm-error-code"
+
+	AnnotationICSVMErrorMessage = "capics.infrastructure.cluster.x-k8s.io/vm-error-message"
+)
+
+
 const metadataFormat = `
 instance-id: "{{ .Hostname }}"
 local-hostname: "{{ .Hostname }}"

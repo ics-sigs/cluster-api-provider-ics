@@ -26,9 +26,10 @@ import (
 	"github.com/ics-sigs/cluster-api-provider-ics/pkg/context"
 	"github.com/ics-sigs/cluster-api-provider-ics/pkg/services/goclient/image"
 	"github.com/ics-sigs/cluster-api-provider-ics/pkg/services/goclient/template"
-	"github.com/pkg/errors"
-
 	infrautilv1 "github.com/ics-sigs/cluster-api-provider-ics/pkg/util"
+	"github.com/pkg/errors"
+	"k8s.io/klog"
+
 	basetypv1 "github.com/ics-sigs/ics-go-sdk/client/types"
 	basehstv1 "github.com/ics-sigs/ics-go-sdk/host"
 	basenetv1 "github.com/ics-sigs/ics-go-sdk/network"
@@ -211,6 +212,9 @@ func CloneVM(ctx *context.VMContext, userdata string) error {
 	vmTemplate := basetypv1.VirtualMachine{}
 	tpl, err := template.FindTemplate(ctx, ctx.ICSVM.Spec.Template)
 	if err != nil || tpl == nil {
+		if err != nil {
+			infrautilv1.AddICSErrorAnnotations(ctx.ICSVM, err)
+		}
 		ctx.Logger.Error(err, "fail to find the vm template from ics")
 		return errors.Wrapf(err, "unable to get vm template for %q", ctx)
 	}
@@ -222,6 +226,9 @@ func CloneVM(ctx *context.VMContext, userdata string) error {
 	storageService := basestv1.NewStorageService(ctx.GetSession().Client)
 	dataStore, err := storageService.GetStorageInfoByName(ctx, ctx.ICSVM.Spec.Datastore)
 	if err != nil || dataStore == nil {
+		if err != nil {
+			infrautilv1.AddICSErrorAnnotations(ctx.ICSVM, err)
+		}
 		ctx.Logger.Error(err, "fail to find the data store from ics")
 		return errors.Wrapf(err, "unable to get DataStore for %q", ctx)
 	}
@@ -232,6 +239,9 @@ func CloneVM(ctx *context.VMContext, userdata string) error {
 		if device.SwitchType == NormalSwitchType || device.SwitchType == LocalSDNSwitchType {
 			network, err := networkService.GetNetworkByName(ctx, device.NetworkName)
 			if err != nil || network == nil {
+				if err != nil {
+					infrautilv1.AddICSErrorAnnotations(ctx.ICSVM, err)
+				}
 				ctx.Logger.Error(err, "fail to find the network devices from ics")
 				return errors.Wrapf(err, "unable to get networks for %q", ctx)
 			}
@@ -303,6 +313,7 @@ func CloneVM(ctx *context.VMContext, userdata string) error {
 		return errors.Wrapf(err, "error getting network specs for %q", ctx)
 	}
 	vmTemplate.Nics = networkSpecs
+	klog.Infof("DavidWang# VM Template Nics: %+v", networkSpecs)
 
 	metadata := strings.ReplaceAll(METADATA, "VM_HOST_NAME", vmTemplate.Name)
 	metadata = strings.ReplaceAll(metadata, "VM_UUID", vmTemplate.UUID)
@@ -332,6 +343,7 @@ func CloneVM(ctx *context.VMContext, userdata string) error {
 	virtualMachineService := basevmv1.NewVirtualMachineService(ctx.GetSession().Client)
 	task, err := virtualMachineService.CreateVMByTemplate(ctx, vmTemplate, true)
 	if err != nil {
+		infrautilv1.AddICSErrorAnnotations(ctx.ICSVM, err)
 		ctx.Logger.Error(err, "fail to create vm by the template")
 		return errors.Wrapf(err, "error trigging clone op for machine %s", ctx)
 	}
@@ -549,6 +561,7 @@ func getAvailableHosts(ctx *context.VMContext,
 	hostService := basehstv1.NewHostService(ctx.Session.Client)
 	hostList, err := hostService.GetHostList(ctx)
 	if err != nil {
+		infrautilv1.AddICSErrorAnnotations(ctx.ICSVM, err)
 		return basetypv1.Host{}, err
 	}
 	clusterID := ctx.ICSVM.Spec.Cluster
@@ -564,6 +577,7 @@ func getAvailableHosts(ctx *context.VMContext,
 
 	storageHosts, err := hostService.GetHostListByStorageID(ctx, dataStore.ID)
 	if err != nil {
+		infrautilv1.AddICSErrorAnnotations(ctx.ICSVM, err)
 		return basetypv1.Host{}, err
 	}
 	for _, host := range storageHosts {

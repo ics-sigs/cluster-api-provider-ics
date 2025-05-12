@@ -21,8 +21,6 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
-
 	basetypv1 "github.com/ics-sigs/ics-go-sdk/client/types"
 	basevmv1 "github.com/ics-sigs/ics-go-sdk/vm"
 
@@ -55,7 +53,7 @@ func findTemplateByInstanceUUID(ctx tplContext, templateID string) (*basetypv1.V
 	virtualMachineService := basevmv1.NewVirtualMachineService(ctx.GetSession().Client)
 	tpl, err := virtualMachineService.GetVMTemplateByUUID(ctx, templateID)
 	if err != nil {
-		return nil, errors.Wrap(err, "error querying template by instance UUID")
+		return nil, err
 	}
 	if tpl != nil {
 		return tpl, nil
@@ -68,7 +66,7 @@ func findTemplateByName(ctx tplContext, templateName string) (*basetypv1.Virtual
 	virtualMachineService := basevmv1.NewVirtualMachineService(ctx.GetSession().Client)
 	tpl, err := virtualMachineService.GetVMTemplateByName(ctx, templateName)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to find tempate by name %q", templateName)
+		return nil, err
 	}
 	return tpl, nil
 }

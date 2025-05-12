@@ -31,6 +31,7 @@ import (
 
 	"github.com/ics-sigs/cluster-api-provider-ics/pkg/context"
 	"github.com/ics-sigs/cluster-api-provider-ics/pkg/services/goclient/net"
+	infrautilv1 "github.com/ics-sigs/cluster-api-provider-ics/pkg/util"
 )
 
 func sanitizeIPAddrs(ctx *context.VMContext, ipAddrs []string) []string {
@@ -142,6 +143,13 @@ func reconcileInFlightTask(ctx *context.VMContext) (bool, error) {
 		ctx.ICSVM.Status.TaskRef = ""
 		return false, nil
 	case "ERROR":
+		annotations := ctx.ICSVM.ObjectMeta.GetAnnotations()
+		if annotations == nil {
+			annotations = make(map[string]string)
+		}
+		annotations[infrautilv1.AnnotationICSVMErrorCode] = task.Error
+		annotations[infrautilv1.AnnotationICSVMErrorMessage] = task.ErrorCode
+		ctx.ICSVM.ObjectMeta.SetAnnotations(annotations)
 		ctx.ICSVM.Status.TaskRef = ""
 		return false, nil
 	default:

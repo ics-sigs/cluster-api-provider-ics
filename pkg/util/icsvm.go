@@ -189,3 +189,16 @@ func addOffsetToIP(ip net.IP) {
 		}
 	}
 }
+
+func AddICSErrorAnnotations(vm *infrav1.ICSVM, err error) {
+	annotations := vm.ObjectMeta.GetAnnotations()
+	if annotations == nil {
+		annotations = make(map[string]string)
+	}
+	msgMap, error := ExtractICSError(err.Error())
+	if error == nil {
+		annotations[AnnotationICSVMErrorCode] = msgMap[ICSErrorCode]
+		annotations[AnnotationICSVMErrorMessage] = msgMap[ICSErrorMessage]
+		vm.ObjectMeta.SetAnnotations(annotations)
+	}
+}
