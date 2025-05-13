@@ -278,6 +278,12 @@ func (vms *VMService) reconcilePowerState(ctx *virtualMachineContext) (bool, err
 		}
 		return false, nil
 	case infrav1.VirtualMachinePowerStatePoweredOn:
+		vm, err := ctx.Obj.GetVM(ctx, ctx.Ref.Value)
+		if err != nil {
+			infrautilv1.AddICSErrorAnnotations(ctx.ICSVM, err)
+			return false, nil
+		}
+		ctx.ICSVM.Status.Host = vm.HostID
 		return true, nil
 	default:
 		return false, errors.Errorf("unexpected power state %q for vm %s", powerState, ctx)

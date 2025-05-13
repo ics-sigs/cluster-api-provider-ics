@@ -22,13 +22,16 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
+	"k8s.io/klog"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
+
 	infrav1 "github.com/ics-sigs/cluster-api-provider-ics/api/v1beta1"
 	"github.com/ics-sigs/cluster-api-provider-ics/pkg/context"
 	"github.com/ics-sigs/cluster-api-provider-ics/pkg/services/goclient/image"
 	"github.com/ics-sigs/cluster-api-provider-ics/pkg/services/goclient/template"
 	infrautilv1 "github.com/ics-sigs/cluster-api-provider-ics/pkg/util"
-	"github.com/pkg/errors"
-	"k8s.io/klog"
 
 	basetypv1 "github.com/ics-sigs/ics-go-sdk/client/types"
 	basehstv1 "github.com/ics-sigs/ics-go-sdk/host"
@@ -613,14 +616,33 @@ func getAvailableHosts(ctx *context.VMContext,
 		}
 	}
 
+	antiTopo := antiAffinityICSVM(ctx)
+	availableAntiTopo := make(map[string]int)
+	availableMap := make(map[string]basetypv1.Host)
+	optimal := 9999
+
 	memoryInByte := int(ctx.ICSVM.Spec.MemoryMiB * 1024 * 1024)
 	for _, host := range hosts {
 		_, storageOK := storageHostsIndex[host.ID]
 		_, networkOK := networkHostsIndex[host.ID]
 		if storageOK && networkOK {
 			if host.LogicFreeMemoryInByte > memoryInByte {
-				availableHosts = append(availableHosts, host)
+				//availableHosts = append(availableHosts, host)
+				availableMap[host.ID] = host
+				if value, ok := antiTopo[host.ID]; ok {
+					availableAntiTopo[host.ID] = value + 1
+				} else {
+					availableAntiTopo[host.ID] = 1
+				}
+				if availableAntiTopo[host.ID] <= optimal {
+					optimal = availableAntiTopo[host.ID]
+				}
 			}
+		}
+	}
+	for key, value := range availableMap {
+		if availableAntiTopo[key] <= optimal {
+			availableHosts = append(availableHosts, value)
 		}
 	}
 	if len(availableHosts) > 0 {
@@ -630,4 +652,36 @@ func getAvailableHosts(ctx *context.VMContext,
 		return host, errors.Errorf("No hosts meet the scheduling conditions, selected 0 from the %d hosts", len(hosts))
 	}
 	return host, nil
+}
+
+func antiAffinityICSVM(ctx *context.VMContext,) map[string]int {
+	result := make(map[string]int)
+
+	controlPlane := infrautilv1.IsControlPlaneMachine(ctx.ICSVM)
+	clusterName, ok := ctx.ICSVM.GetLabels()[clusterv1.ClusterLabelName]
+	if !ok {
+		return result
+	}
+
+	vms := &infrav1.ICSVMList{}
+	err := ctx.Client.List(ctx, vms, ctrlclient.MatchingLabels(
+		map[string]string{
+			clusterv1.ClusterLabelName: clusterName,
+		},
+	))
+	if err != nil {
+		return result
+	}
+	for _, vm := range vms.Items {
+		if controlPlane == infrautilv1.IsControlPlaneMachine(&vm) {
+			if vm.Status.Host != "" {
+				if value, ok := result[vm.Status.Host]; ok {
+					result[vm.Status.Host] = value + 1
+				} else {
+					result[vm.Status.Host] = 1
+				}
+			}
+		}
+	}
+	return result
 }
