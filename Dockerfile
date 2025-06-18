@@ -30,8 +30,8 @@ RUN --mount=type=bind,target=. \
     -o /out/manager .
 
 # Copy the controller-manager into a thin image
-# gcr.io/distroless/static:nonroot
 ARG TARGETPLATFORM
+# FROM --platform=${TARGETPLATFORM} gcr.io/distroless/static:nonroot
 FROM --platform=${TARGETPLATFORM} localhost:5000/distroless/static:nonroot
 WORKDIR /
 COPY --from=builder /out/manager .

@@ -278,9 +278,11 @@ func (r vmReconciler) reconcileDelete(ctx *context.VMContext) (reconcile.Result,
 		// TODO. How to fix this branch
 		if vm.State != infrav1.VirtualMachineStateNotFound {
 			ctx.Logger.Info("vm state is not reconciled", "expected-vm-state", infrav1.VirtualMachineStateNotFound, "actual-vm-state", vm.State)
-			_ = r.reconcileIPAddressesDelete(ctx)
-			// The VM is deleted so remove the finalizer.
-			ctrlutil.RemoveFinalizer(ctx.ICSVM, infrav1.VMFinalizer)
+			if vm.State != infrav1.VirtualMachineStatePending {
+				_ = r.reconcileIPAddressesDelete(ctx)
+				// The VM is deleted so remove the finalizer.
+				ctrlutil.RemoveFinalizer(ctx.ICSVM, infrav1.VMFinalizer)
+			}
 			return reconcile.Result{}, nil
 		}
 	}
