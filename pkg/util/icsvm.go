@@ -202,3 +202,40 @@ func AddICSErrorAnnotations(vm *infrav1.ICSVM, err error) {
 		vm.ObjectMeta.SetAnnotations(annotations)
 	}
 }
+
+func AddICSTaskAnnotations(vm *infrav1.ICSVM, task *basetypv1.TaskInfo) {
+	annotations := vm.ObjectMeta.GetAnnotations()
+	if annotations == nil {
+		annotations = make(map[string]string)
+	}
+	if task != nil && task.State == "ERROR" {
+		annotations := vm.ObjectMeta.GetAnnotations()
+		if annotations == nil {
+			annotations = make(map[string]string)
+		}
+		annotations[AnnotationICSVMErrorCode] = task.ErrorCode
+		childTasks := task.ChildTasks
+		if len(childTasks) <= 0 {
+			annotations[AnnotationICSVMErrorMessage] = task.Error
+		} else {
+			index := len(childTasks) - 1
+			if childTasks[index].State  == "ERROR" {
+				annotations[AnnotationICSVMErrorMessage] = childTasks[index].Error
+			} else {
+				annotations[AnnotationICSVMErrorMessage] = task.Error
+			}
+		}
+	}
+}
+
+func AddProviderAnnotations(vm *infrav1.ICSVM, errCode string, errMsg string) {
+	annotations := vm.ObjectMeta.GetAnnotations()
+	if annotations == nil {
+		annotations = make(map[string]string)
+	}
+	if len(errCode) > 0 {
+		annotations[AnnotationICSVMErrorCode] = errCode
+		annotations[AnnotationICSVMErrorMessage] = errMsg
+		vm.ObjectMeta.SetAnnotations(annotations)
+	}
+}

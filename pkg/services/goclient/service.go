@@ -18,6 +18,7 @@ package infrastructure
 
 import (
 	"encoding/base64"
+	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -79,6 +80,7 @@ func (vms *VMService) ReconcileVM(ctx *context.VMContext) (vm infrav1.VirtualMac
 			// Get the bootstrap data.
 			metadata, err := vms.getBootstrapData(ctx)
 			if err != nil {
+				infrautilv1.AddProviderAnnotations(ctx.ICSVM, "599701", fmt.Sprintf("[%s] Cloud-init 配置失败！", ctx.ICSVM.Name))
 				return vm, err
 			}
 			metadataBytes, err := base64.StdEncoding.DecodeString(metadata)
@@ -90,6 +92,7 @@ func (vms *VMService) ReconcileVM(ctx *context.VMContext) (vm infrav1.VirtualMac
 			defer mutex.Unlock()
 
 			if vms.isWaitingForStaticIPAllocation(ctx) {
+				infrautilv1.AddProviderAnnotations(ctx.ICSVM, "599703", "检测空闲IP地址不足，当前无充足预留IP地址！")
 				conditions.MarkFalse(ctx.ICSVM, infrav1.VMProvisionedCondition, infrav1.WaitingForStaticIPAllocationReason, clusterv1.ConditionSeverityInfo, "")
 				ctx.Logger.Info("vm is waiting for static ip to be available")
 				return vm, errors.New(infrav1.WaitingForNetworkAddressesReason)
@@ -99,6 +102,7 @@ func (vms *VMService) ReconcileVM(ctx *context.VMContext) (vm infrav1.VirtualMac
 			// Create the VM.
 			return vm, basev1.CreateVM(ctx, string(metadataBytes))
 		} else {
+			infrautilv1.AddProviderAnnotations(ctx.ICSVM, "599702", "iCenter API调用失败！")
 			return vm, errors.New(infrav1.ICSAPIRequestFailedReason)
 		}
 	}
@@ -247,6 +251,7 @@ func (vms *VMService) reconcilePowerState(ctx *virtualMachineContext) (bool, err
 			return false, nil
 		}
 		if vm.MemoryInByte >= host.FreeMemoryInByte || vm.MemoryInByte >= host.LogicFreeMemoryInByte {
+			infrautilv1.AddProviderAnnotations(ctx.ICSVM, "599601", fmt.Sprintf("开启电源失败，主机[%s]空闲内存不足！", host.IP))
 			return false, errors.New(infrav1.PoweringOnFailedReason)
 		}
 		task, err := ctx.Obj.PowerOnVM(ctx, ctx.Ref.Value)
@@ -265,12 +270,7 @@ func (vms *VMService) reconcilePowerState(ctx *virtualMachineContext) (bool, err
 		taskService := basetkv1.NewTaskService(ctx.Session.Client)
 		taskInfo, _ := taskService.WaitForResult(ctx, task)
 		if taskInfo != nil && taskInfo.State == "ERROR" {
-			annotations := ctx.ICSVM.ObjectMeta.GetAnnotations()
-			if annotations == nil {
-				annotations = make(map[string]string)
-			}
-			annotations[infrautilv1.AnnotationICSVMErrorCode] = taskInfo.Error
-			annotations[infrautilv1.AnnotationICSVMErrorMessage] = taskInfo.ErrorCode
+			infrautilv1.AddICSTaskAnnotations(ctx.ICSVM, taskInfo)
 			ctx.Logger.Error(errors.New(taskInfo.Error), "failed to trigger power on the vm")
 			return false, errors.New(infrav1.PoweringOnFailedReason)
 		} else {

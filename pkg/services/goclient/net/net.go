@@ -123,13 +123,7 @@ func GetNetworkStatus(
 					taskService := basetkv1.NewTaskService(ctx.Session.Client)
 					taskInfo, _ := taskService.WaitForResult(ctx, task)
 					if taskInfo != nil && taskInfo.State == "ERROR" {
-						annotations := ctx.ICSVM.ObjectMeta.GetAnnotations()
-						if annotations == nil {
-							annotations = make(map[string]string)
-						}
-						annotations[infrautilv1.AnnotationICSVMErrorCode] = taskInfo.Error
-						annotations[infrautilv1.AnnotationICSVMErrorMessage] = taskInfo.ErrorCode
-						ctx.ICSVM.ObjectMeta.SetAnnotations(annotations)
+						infrautilv1.AddICSTaskAnnotations(ctx.ICSVM, taskInfo)
 					}
 				}
 			}

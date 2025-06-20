@@ -17,6 +17,7 @@ limitations under the License.
 package icenter
 
 import (
+	"fmt"
 	"math/rand"
 	"strings"
 	"sync"
@@ -217,6 +218,8 @@ func CloneVM(ctx *context.VMContext, userdata string) error {
 	if err != nil || tpl == nil {
 		if err != nil {
 			infrautilv1.AddICSErrorAnnotations(ctx.ICSVM, err)
+		} else {
+			infrautilv1.AddProviderAnnotations(ctx.ICSVM, "599001", fmt.Sprintf("获取虚拟机模板[%s]信息失败！", ctx.ICSVM.Spec.Template))
 		}
 		ctx.Logger.Error(err, "fail to find the vm template from ics")
 		return errors.Wrapf(err, "unable to get vm template for %q", ctx)
@@ -231,6 +234,8 @@ func CloneVM(ctx *context.VMContext, userdata string) error {
 	if err != nil || dataStore == nil {
 		if err != nil {
 			infrautilv1.AddICSErrorAnnotations(ctx.ICSVM, err)
+		} else {
+			infrautilv1.AddProviderAnnotations(ctx.ICSVM, "599002", fmt.Sprintf("获取存储池[%s]信息失败！", ctx.ICSVM.Spec.Datastore))
 		}
 		ctx.Logger.Error(err, "fail to find the data store from ics")
 		return errors.Wrapf(err, "unable to get DataStore for %q", ctx)
@@ -244,6 +249,8 @@ func CloneVM(ctx *context.VMContext, userdata string) error {
 			if err != nil || network == nil {
 				if err != nil {
 					infrautilv1.AddICSErrorAnnotations(ctx.ICSVM, err)
+				} else {
+					infrautilv1.AddProviderAnnotations(ctx.ICSVM, "599003", fmt.Sprintf("获取网络[%s]信息失败！", device.NetworkName))
 				}
 				ctx.Logger.Error(err, "fail to find the network devices from ics")
 				return errors.Wrapf(err, "unable to get networks for %q", ctx)
@@ -264,7 +271,9 @@ func CloneVM(ctx *context.VMContext, userdata string) error {
 			}
 			networks[index] = network
 		} else {
+			infrautilv1.AddProviderAnnotations(ctx.ICSVM, "599004", fmt.Sprintf("当前系统不支持交换机类型[%s]！", device.SwitchType))
 			ctx.Logger.Error(errors.New("Network Error"), "Failed to config the network switch type by the ICS version")
+			return errors.Wrapf(err, "unable to get networks for %q", ctx)
 		}
 	}
 
@@ -312,6 +321,7 @@ func CloneVM(ctx *context.VMContext, userdata string) error {
 
 	networkSpecs, err := getNetworkSpecs(ctx, tpl.Nics, networks)
 	if err != nil {
+		infrautilv1.AddProviderAnnotations(ctx.ICSVM, "599201", fmt.Sprintf("配置网络参数失败！"))
 		ctx.Logger.Error(err, "fail to find the network spec")
 		return errors.Wrapf(err, "error getting network specs for %q", ctx)
 	}
@@ -649,6 +659,7 @@ func getAvailableHosts(ctx *context.VMContext,
 		index := rand.Intn(len(availableHosts))
 		host = availableHosts[index]
 	} else {
+		infrautilv1.AddProviderAnnotations(ctx.ICSVM, "599100", fmt.Sprintf("调度失败，没有主机符合调度条件！"))
 		return host, errors.Errorf("No hosts meet the scheduling conditions, selected 0 from the %d hosts", len(hosts))
 	}
 	return host, nil

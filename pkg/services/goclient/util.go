@@ -143,13 +143,7 @@ func reconcileInFlightTask(ctx *context.VMContext) (bool, error) {
 		ctx.ICSVM.Status.TaskRef = ""
 		return false, nil
 	case "ERROR":
-		annotations := ctx.ICSVM.ObjectMeta.GetAnnotations()
-		if annotations == nil {
-			annotations = make(map[string]string)
-		}
-		annotations[infrautilv1.AnnotationICSVMErrorCode] = task.Error
-		annotations[infrautilv1.AnnotationICSVMErrorMessage] = task.ErrorCode
-		ctx.ICSVM.ObjectMeta.SetAnnotations(annotations)
+		infrautilv1.AddICSTaskAnnotations(ctx.ICSVM, task)
 		ctx.ICSVM.Status.TaskRef = ""
 		return false, nil
 	default:
