@@ -27,11 +27,13 @@ import (
 	apitypes "k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/cluster-api/util/patch"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	ctrlutil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
@@ -67,7 +69,7 @@ func AddIPAddressControllerToManager(ctx *context.ControllerManagerContext, mgr 
 	r := ipAddressReconciler{ControllerContext: controllerContext}
 	_, err := ctrl.NewControllerManagedBy(mgr).
 		// Watch the controlled, infrastructure resource.
-		For(controlledType).
+		For(controlledType, builder.WithPredicates(predicate.GenerationChangedPredicate{})).
 		// Watch any IPAddress resources owned by the controlled type.
 		Watches(
 			&source.Kind{Type: &infrav1.ICSVM{}},

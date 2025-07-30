@@ -29,6 +29,7 @@ import (
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util/conditions"
 
+	basetypv1 "github.com/ics-sigs/ics-go-sdk/client/types"
 	basehstv1 "github.com/ics-sigs/ics-go-sdk/host"
 	basetkv1 "github.com/ics-sigs/ics-go-sdk/task"
 	basevmv1 "github.com/ics-sigs/ics-go-sdk/vm"
@@ -64,6 +65,13 @@ func (vms *VMService) ReconcileVM(ctx *context.VMContext) (vm infrav1.VirtualMac
 	if inFlight, err := reconcileInFlightTask(ctx); err != nil || inFlight {
 		return vm, err
 	}
+
+	defer func() {
+		// Patch the ICSVM resource.
+		if err := ctx.Patch(); err != nil {
+			ctx.Logger.Error(err, "Reconcile VM Error")
+		}
+	}()
 
 	// This deferred function will trigger a reconcile event for the
 	// ICSVM resource once its associated task completes. If
@@ -144,6 +152,13 @@ func (vms *VMService) DestroyVM(ctx *context.VMContext) (infrav1.VirtualMachine,
 		return vm, err
 	}
 
+	defer func() {
+		// Patch the ICSVM resource.
+		if err := ctx.Patch(); err != nil {
+			ctx.Logger.Error(err, "Destroy VM Error")
+		}
+	}()
+
 	// This deferred function will trigger a reconcile event for the
 	// ICSVM resource once its associated task completes. If
 	// there is no task for the ICSVM resource then no reconcile
@@ -187,6 +202,13 @@ func (vms *VMService) DestroyVM(ctx *context.VMContext) (infrav1.VirtualMachine,
 			ctx.Logger.Error(err, "power off the vm error")
 			return vm, err
 		}
+
+		taskService := basetkv1.NewTaskService(ctx.Session.Client)
+		taskInfo, _ := taskService.WaitForResult(ctx, task)
+		if taskInfo != nil && taskInfo.State == "ERROR" {
+			infrautilv1.AddICSTaskAnnotations(ctx.ICSVM, taskInfo)
+			ctx.Logger.Error(errors.New(taskInfo.Error), "failed to trigger power off the vm")
+		}
 		ctx.ICSVM.Status.TaskRef = task.TaskId
 		ctx.Logger.Info("wait for VM to be powered off")
 		return vm, nil
@@ -203,6 +225,13 @@ func (vms *VMService) DestroyVM(ctx *context.VMContext) (infrav1.VirtualMachine,
 	if err != nil {
 		ctx.Logger.Error(err, "fail to destroying vm")
 		return vm, err
+	}
+
+	taskService := basetkv1.NewTaskService(ctx.Session.Client)
+	taskInfo, _ := taskService.WaitForResult(ctx, task)
+	if taskInfo != nil && taskInfo.State == "ERROR" {
+		infrautilv1.AddICSTaskAnnotations(ctx.ICSVM, taskInfo)
+		ctx.Logger.Error(errors.New(taskInfo.Error), "failed to trigger destroy the vm")
 	}
 	ctx.ICSVM.Status.TaskRef = task.TaskId
 	ctx.Logger.Info("wait for VM to be destroyed")
@@ -236,6 +265,33 @@ func (vms *VMService) reconcilePowerState(ctx *virtualMachineContext) (bool, err
 	if err != nil {
 		return false, err
 	}
+	count := 1
+	for {
+		if powerState == infrav1.VirtualMachineTransientState {
+			if len(ctx.ICSVM.Status.TaskRef) > 0 {
+				ref := basetypv1.Task{
+					TaskId: ctx.ICSVM.Status.TaskRef,
+				}
+				taskService := basetkv1.NewTaskService(ctx.Session.Client)
+				_, _ = taskService.WaitForResult(ctx, &ref)
+			} else {
+				time.Sleep(1000 * time.Millisecond)
+			}
+			powerState, err = vms.getPowerState(ctx)
+			if count > 120 {
+				break
+			}
+			count++
+		} else {
+			break
+		}
+	}
+	defer func() {
+		// Patch the ICSVM resource.
+		if err := ctx.Patch(); err != nil {
+			ctx.Logger.Error(err, "ICSVM Power State Error")
+		}
+	}()
 	switch powerState {
 	case infrav1.VirtualMachinePowerStatePoweredOff:
 		ctx.Logger.Info("powering on")
@@ -263,19 +319,19 @@ func (vms *VMService) reconcilePowerState(ctx *virtualMachineContext) (bool, err
 		// Update the ICSVM.Status.TaskRef to track the power-on task.
 		ctx.ICSVM.Status.TaskRef = task.TaskId
 
-		// Once the VM is successfully powered on, a reconcile request should be
-		// triggered once the VM reports IP addresses are available.
-		reconcileICSVMWhenNetworkIsReady(ctx, task)
-
 		taskService := basetkv1.NewTaskService(ctx.Session.Client)
 		taskInfo, _ := taskService.WaitForResult(ctx, task)
 		if taskInfo != nil && taskInfo.State == "ERROR" {
 			infrautilv1.AddICSTaskAnnotations(ctx.ICSVM, taskInfo)
 			ctx.Logger.Error(errors.New(taskInfo.Error), "failed to trigger power on the vm")
 			return false, errors.New(infrav1.PoweringOnFailedReason)
-		} else {
-			ctx.Logger.Info("wait for VM to be powered on")
+		//} else {
+		//	ctx.Logger.Info("wait for VM to be powered on")
 		}
+
+		// Once the VM is successfully powered on, a reconcile request should be
+		// triggered once the VM reports IP addresses are available.
+		reconcileICSVMWhenNetworkIsReady(ctx, task)
 		return false, nil
 	case infrav1.VirtualMachinePowerStatePoweredOn:
 		vm, err := ctx.Obj.GetVM(ctx, ctx.Ref.Value)
@@ -285,55 +341,57 @@ func (vms *VMService) reconcilePowerState(ctx *virtualMachineContext) (bool, err
 		}
 		ctx.ICSVM.Status.Host = vm.HostID
 		return true, nil
+	case infrav1.VirtualMachineTransientState:
+		return false, nil
 	default:
 		return false, errors.Errorf("unexpected power state %q for vm %s", powerState, ctx)
 	}
 }
 
-func (vms *VMService) reconcileCloudInit(ctx *virtualMachineContext) (bool, error) {
-	vmObj, err := ctx.Obj.GetVM(ctx, ctx.Ref.Value)
-	if err != nil {
-		return false, errors.Errorf("get vm %s info err", ctx.Ref.Value)
-	}
-
-	if vmObj != nil && len(vmObj.CloudInit.UserData) > 0 {
-		return true, nil
-	}
-
-	ctx.Logger.Info("restarting vm on")
-
-	if vmObj.Status == "STOPPED" {
-		ctx.Logger.Info("first powering on")
-		powerOnTask, err := ctx.Obj.PowerOnVM(ctx, ctx.Ref.Value)
-		if err != nil {
-			return false, errors.Wrapf(err, "failed to trigger power on op for vm %s", ctx)
-		}
-
-		// Wait for the VM to be powered off.
-		taskService := basetkv1.NewTaskService(ctx.Session.Client)
-		powerOnTaskInfo, err := taskService.WaitForResult(ctx, powerOnTask)
-		if err != nil && powerOnTaskInfo == nil {
-			ctx.Logger.Error(err, "ics task tracing error.", "id", powerOnTask.TaskId)
-		}
-		time.Sleep(time.Duration(24) * time.Second)
-
-		powerOffTask, err := ctx.Obj.PowerOffVM(ctx, ctx.Ref.Value)
-		if err != nil {
-			return false, errors.Wrapf(err, "failed to trigger power off op for vm %s", ctx)
-		}
-
-		// Wait for the VM to be powered off.
-		taskService = basetkv1.NewTaskService(ctx.Session.Client)
-		powerOffTaskInfo, err := taskService.WaitForResult(ctx, powerOffTask)
-		if err != nil && powerOffTaskInfo == nil {
-			ctx.Logger.Error(err, "ics task tracing error.", "id", powerOffTask.TaskId)
-		}
-		time.Sleep(time.Duration(12) * time.Second)
-	}
-
-	ctx.Logger.Info("Reconcile CloudInit Will Starting ...")
-	return true, nil
-}
+//func (vms *VMService) reconcileCloudInit(ctx *virtualMachineContext) (bool, error) {
+//	vmObj, err := ctx.Obj.GetVM(ctx, ctx.Ref.Value)
+//	if err != nil {
+//		return false, errors.Errorf("get vm %s info err", ctx.Ref.Value)
+//	}
+//
+//	if vmObj != nil && len(vmObj.CloudInit.UserData) > 0 {
+//		return true, nil
+//	}
+//
+//	ctx.Logger.Info("restarting vm on")
+//
+//	if vmObj.Status == "STOPPED" {
+//		ctx.Logger.Info("first powering on")
+//		powerOnTask, err := ctx.Obj.PowerOnVM(ctx, ctx.Ref.Value)
+//		if err != nil {
+//			return false, errors.Wrapf(err, "failed to trigger power on op for vm %s", ctx)
+//		}
+//
+//		// Wait for the VM to be powered off.
+//		taskService := basetkv1.NewTaskService(ctx.Session.Client)
+//		powerOnTaskInfo, err := taskService.WaitForResult(ctx, powerOnTask)
+//		if err != nil && powerOnTaskInfo == nil {
+//			ctx.Logger.Error(err, "ics task tracing error.", "id", powerOnTask.TaskId)
+//		}
+//		time.Sleep(time.Duration(24) * time.Second)
+//
+//		powerOffTask, err := ctx.Obj.PowerOffVM(ctx, ctx.Ref.Value)
+//		if err != nil {
+//			return false, errors.Wrapf(err, "failed to trigger power off op for vm %s", ctx)
+//		}
+//
+//		// Wait for the VM to be powered off.
+//		taskService = basetkv1.NewTaskService(ctx.Session.Client)
+//		powerOffTaskInfo, err := taskService.WaitForResult(ctx, powerOffTask)
+//		if err != nil && powerOffTaskInfo == nil {
+//			ctx.Logger.Error(err, "ics task tracing error.", "id", powerOffTask.TaskId)
+//		}
+//		time.Sleep(time.Duration(12) * time.Second)
+//	}
+//
+//	ctx.Logger.Info("Reconcile CloudInit Will Starting ...")
+//	return true, nil
+//}
 
 func (vms *VMService) reconcileUUID(ctx *virtualMachineContext) {
 	vm, err := ctx.Obj.GetVM(ctx, ctx.Ref.Value)

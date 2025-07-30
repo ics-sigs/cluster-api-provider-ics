@@ -24,7 +24,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"k8s.io/klog"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -326,7 +325,6 @@ func CloneVM(ctx *context.VMContext, userdata string) error {
 		return errors.Wrapf(err, "error getting network specs for %q", ctx)
 	}
 	vmTemplate.Nics = networkSpecs
-	klog.Infof("DavidWang# VM Template Nics: %+v", networkSpecs)
 
 	metadata := strings.ReplaceAll(METADATA, "VM_HOST_NAME", vmTemplate.Name)
 	metadata = strings.ReplaceAll(metadata, "VM_UUID", vmTemplate.UUID)
@@ -367,7 +365,7 @@ func CloneVM(ctx *context.VMContext, userdata string) error {
 	// reflected in the status right away, this avoid situations
 	// of concurrent clones
 	if err := ctx.Patch(); err != nil {
-		ctx.Logger.Error(err, "patch failed", "icsvm", ctx.ICSVM)
+		ctx.Logger.Error(err, "patch create vm failed", "icsvm", ctx.ICSVM)
 	}
 	return nil
 }

@@ -27,6 +27,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	apitypes "k8s.io/apimachinery/pkg/types"
+	"k8s.io/klog"
 	"k8s.io/utils/pointer"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	clusterutilv1 "sigs.k8s.io/cluster-api/util"
@@ -34,6 +35,7 @@ import (
 	"sigs.k8s.io/cluster-api/util/conditions"
 	"sigs.k8s.io/cluster-api/util/patch"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	ctrlutil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -82,7 +84,7 @@ func AddVMControllerToManager(ctx *context.ControllerManagerContext, mgr manager
 	r := vmReconciler{ControllerContext: controllerContext}
 	controller, err := ctrl.NewControllerManagedBy(mgr).
 		// Watch the controlled, infrastructure resource.
-		For(controlledType).
+		For(controlledType, builder.WithPredicates(predicate.GenerationChangedPredicate{})).
 		// Watch a GenericEvent channel for the controlled resource.
 		//
 		// This is useful when there are events outside of Kubernetes that
@@ -219,6 +221,17 @@ func (r vmReconciler) Reconcile(ctx goctx.Context, req ctrl.Request) (_ ctrl.Res
 	// Always issue a patch when exiting this function so changes to the
 	// resource are patched back to the API server.
 	defer func() {
+		klog.Infof("DavidWang# Reconcile ICSVM [%s] Status: %+v", vmContext.ICSVM.Name, vmContext.ICSVM.Status)
+		if _, ok := vmContext.ICSVM.GetAnnotations()[infrautilv1.AnnotationICSVMErrorCode]; !ok {
+			taskInfo := basev1.GetTask(vmContext)
+			if taskInfo != nil {
+				klog.Infof("DavidWang# Waiting TaskInfo: %+v", taskInfo)
+			  	if taskInfo.State == "ERROR" {
+					infrautilv1.AddICSTaskAnnotations(vmContext.ICSVM, taskInfo)
+			  	}
+			}
+		}
+		klog.Infof("DavidWang# Reconcile ICSVM [%s] Annotation: %+v", vmContext.ICSVM.Name, vmContext.ICSVM.GetAnnotations())
 		// always update the readyCondition.
 		conditions.SetSummary(vmContext.ICSVM,
 			conditions.WithConditions(
@@ -387,6 +400,10 @@ func (r vmReconciler) reconcileNormal(ctx *context.VMContext, icsMachine *infrav
 	ctx.ICSVM.Status.Ready = true
 	conditions.MarkTrue(ctx.ICSVM, infrav1.VMProvisionedCondition)
 	ctx.Logger.Info("ICSVM is ready")
+
+	if _, ok := ctx.ICSVM.GetAnnotations()[infrautilv1.AnnotationICSVMErrorMessage]; ok {
+		klog.Infof("DavidWang# ICSVM [%s] Annotation: %+v", ctx.ICSVM.Name, ctx.ICSVM.GetAnnotations())
+	}
 
 	return reconcile.Result{}, nil
 }

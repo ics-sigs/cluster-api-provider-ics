@@ -86,7 +86,7 @@ func AddMachineControllerToManager(ctx *context.ControllerManagerContext, mgr ma
 
 	builder := ctrl.NewControllerManagedBy(mgr).
 		// Watch the controlled, infrastructure resource.
-		For(controlledType).
+		For(controlledType, ctrlbldr.WithPredicates(predicate.GenerationChangedPredicate{})).
 		// Watch the CAPI resource that owns this infrastructure resource.
 		Watches(
 			&source.Kind{Type: &clusterv1.Machine{}},

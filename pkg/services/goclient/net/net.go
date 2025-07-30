@@ -97,8 +97,6 @@ func GetNetworkStatus(
 		if isStatic {
 			isChanged := false
 			// Debug, update vms
-			//klog.Infof("DavidWang# K8S ICSVM [%s] Nics: %+v", ctx.ICSVM.Name, ctx.ICSVM.Spec.Network.Devices)
-			//klog.Infof("DavidWang# current VM [%s] Nics: %+v", vm.Name, vm.Nics)
 			for index := 1; index < len(nicDevices); index++ {
 				device := nicDevices[index]
 				if device.DHCP4 || device.DHCP6 {

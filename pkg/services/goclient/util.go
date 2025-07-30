@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"k8s.io/klog"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 
 	basetypv1 "github.com/ics-sigs/ics-go-sdk/client/types"
@@ -104,7 +105,7 @@ func findVM(ctx *context.VMContext) (basetypv1.ManagedObjectReference, error) {
 	return basetypv1.ManagedObjectReference{}, errNotFound{byInventoryPath: ctx.ICSVM.Name}
 }
 
-func getTask(ctx *context.VMContext) *basetypv1.TaskInfo {
+func GetTask(ctx *context.VMContext) *basetypv1.TaskInfo {
 	if ctx.ICSVM.Status.TaskRef == "" {
 		return nil
 	}
@@ -121,8 +122,9 @@ func getTask(ctx *context.VMContext) *basetypv1.TaskInfo {
 }
 
 func reconcileInFlightTask(ctx *context.VMContext) (bool, error) {
+	klog.Infof("DavidWang# ReconcileInFlightTask ICSVM [%s] Status: %+v", ctx.ICSVM.Name, ctx.ICSVM.Status)
 	// Check to see if there is an in-flight task.
-	task := getTask(ctx)
+	task := GetTask(ctx)
 
 	// If no task was found then make sure to clear the ICSVM
 	// resource's Status.TaskRef field.
@@ -160,7 +162,12 @@ func reconcileICSVMWhenNetworkIsReady(ctx *virtualMachineContext, powerOnTask *b
 			taskService := basetkv1.NewTaskService(ctx.Session.Client)
 			powerOnTaskInfo, err := taskService.WaitForResult(ctx, powerOnTask)
 			if err != nil && powerOnTaskInfo == nil {
+				infrautilv1.AddProviderAnnotations(ctx.ICSVM, "599010", "获取启动虚拟机任务失败！")
 				return nil, nil, errors.Wrapf(err, "failed to wait for power on op for vm %s", ctx)
+			}
+			if powerOnTaskInfo != nil && powerOnTaskInfo.State == "ERROR" {
+				infrautilv1.AddICSTaskAnnotations(ctx.ICSVM, powerOnTaskInfo)
+				return nil, nil, errors.Wrapf(err, "power on for vm %s failed", ctx)
 			}
 			vmInfo, err := ctx.Obj.GetVM(ctx, ctx.Ref.Value)
 			if err != nil {
@@ -199,7 +206,7 @@ func reconcileICSVMWhenNetworkIsReady(ctx *virtualMachineContext, powerOnTask *b
 }
 
 func reconcileICSVMOnTaskCompletion(ctx *context.VMContext) {
-	task := getTask(ctx)
+	task := GetTask(ctx)
 	if task == nil {
 		ctx.Logger.V(6).Info(
 			"skipping reconcile ICSVM on task completion",

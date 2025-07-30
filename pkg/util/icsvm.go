@@ -126,6 +126,10 @@ func GetIPFromNetworkConfig(
 		allocations = infrav1.IPAddressList{}
 	}
 	for _, ipAddress := range allocations.Items {
+		if ipAddress.Spec.VMRef.Name == ctx.ICSVM.Name && ipAddress.GetDeletionTimestamp().IsZero() {
+			_ = ctx.Client.Delete(ctx, &ipAddress)
+			continue
+		}
 		allocatedIPMap[ipAddress.Spec.Address] = "unknown"
 	}
 
@@ -215,7 +219,7 @@ func AddICSTaskAnnotations(vm *infrav1.ICSVM, task *basetypv1.TaskInfo) {
 		}
 		annotations[AnnotationICSVMErrorCode] = task.ErrorCode
 		childTasks := task.ChildTasks
-		if len(childTasks) <= 0 {
+		if len(childTasks) == 0 {
 			annotations[AnnotationICSVMErrorMessage] = task.Error
 		} else {
 			index := len(childTasks) - 1
@@ -225,6 +229,7 @@ func AddICSTaskAnnotations(vm *infrav1.ICSVM, task *basetypv1.TaskInfo) {
 				annotations[AnnotationICSVMErrorMessage] = task.Error
 			}
 		}
+		vm.ObjectMeta.SetAnnotations(annotations)
 	}
 }
 

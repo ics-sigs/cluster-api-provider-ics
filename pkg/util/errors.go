@@ -61,8 +61,8 @@ func ExtractICSError(msg string) (map[string]string, error) {
 	} else {
 		message = matches[1][codex+1:]
 	}
-	if idx := strings.Index(msg, ":"); idx != -1 {
-		value := message[idx+1:]
+	if idx := strings.Index(message, "message:"); idx != -1 {
+		value := message[idx + 8:]
 		result[ICSErrorMessage] = value
 	}
 	return result, nil
