@@ -106,7 +106,7 @@ func findVM(ctx *context.VMContext) (basetypv1.ManagedObjectReference, error) {
 }
 
 func GetTask(ctx *context.VMContext) *basetypv1.TaskInfo {
-	if ctx.ICSVM.Status.TaskRef == "" {
+	if ctx.ICSVM.Status.TaskRef == "" || ctx.Session == nil || ctx.Session.Client == nil {
 		return nil
 	}
 	moRef := basetypv1.Task{

@@ -26,6 +26,7 @@ import (
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	apitypes "k8s.io/apimachinery/pkg/types"
+	"k8s.io/klog"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util/conditions"
 
@@ -78,6 +79,7 @@ func (vms *VMService) ReconcileVM(ctx *context.VMContext) (vm infrav1.VirtualMac
 	// there is no task for the ICSVM resource then no reconcile
 	// event is triggered.
 	defer reconcileICSVMOnTaskCompletion(ctx)
+	klog.Infof("DavidWang# PC02, before findVM, vm info: %+v", vm)
 
 	// Before going further, we need the VM's managed object reference.
 	vmRef, err := findVM(ctx)
@@ -98,6 +100,8 @@ func (vms *VMService) ReconcileVM(ctx *context.VMContext) (vm infrav1.VirtualMac
 			}
 			mutex.Lock()
 			defer mutex.Unlock()
+
+			_ = infrautilv1.CleanResidualIPBeforeCreating(ctx)
 
 			if vms.isWaitingForStaticIPAllocation(ctx) {
 				infrautilv1.AddProviderAnnotations(ctx.ICSVM, "599703", "检测空闲IP地址不足，当前无充足预留IP地址！")
@@ -126,13 +130,19 @@ func (vms *VMService) ReconcileVM(ctx *context.VMContext) (vm infrav1.VirtualMac
 
 	vms.reconcileUUID(vmCtx)
 
+	klog.Infof("DavidWang# PC03, after findVM, vm info: %+v", vm)
+
 	if err := vms.reconcileNetworkStatus(vmCtx); err != nil {
 		return vm, err
 	}
 
+	klog.Infof("DavidWang# PC05, after reconcileNetworkStatus, vm info: %+v", vm)
+
 	if ok, err := vms.reconcilePowerState(vmCtx); err != nil || !ok {
 		return vm, err
 	}
+
+	klog.Infof("DavidWang# PC06, after reconcilePowerState, vm info: %+v", vm)
 
 	vm.State = infrav1.VirtualMachineStateReady
 	return vm, nil
@@ -245,18 +255,19 @@ func (vms *VMService) reconcileNetworkStatus(ctx *virtualMachineContext) error {
 	if err != nil {
 		return err
 	}
+	klog.Infof("DavidWang# PC04, Reconcile network status, net: %+v, icsvm status: %+v", netStatus, ctx.ICSVM.Status)
 	ctx.State.Network = netStatus
-	if len(netStatus) >= 1 {
-		if ctx.ICSVM.Status.Addresses == nil && netStatus[0].IPAddrs != nil {
-			infrautilv1.UpdateNetworkInfo(&ctx.VMContext, netStatus)
-			if infrautilv1.IsControlPlaneMachine(ctx.ICSVM) {
-				err = ctx.Patch()
-				if err != nil {
-					ctx.Logger.Error(err, "ICSVM Path IPAddress Error")
-				}
-			}
-		}
-	}
+	//if len(netStatus) >= 1 {
+	//	if ctx.ICSVM.Status.Addresses == nil && netStatus[0].IPAddrs != nil {
+	//		infrautilv1.UpdateNetworkInfo(&ctx.VMContext, netStatus)
+	//		if infrautilv1.IsControlPlaneMachine(ctx.ICSVM) {
+	//			err = ctx.Patch()
+	//			if err != nil {
+	//				ctx.Logger.Error(err, "ICSVM Path IPAddress Error")
+	//			}
+	//		}
+	//	}
+	//}
 	return nil
 }
 

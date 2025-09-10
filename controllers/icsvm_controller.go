@@ -288,7 +288,6 @@ func (r vmReconciler) reconcileDelete(ctx *context.VMContext) (reconcile.Result,
 		}
 
 		// Requeue the operation until the VM is "notfound".
-		// TODO. How to fix this branch
 		if vm.State != infrav1.VirtualMachineStateNotFound {
 			ctx.Logger.Info("vm state is not reconciled", "expected-vm-state", infrav1.VirtualMachineStateNotFound, "actual-vm-state", vm.State)
 			if vm.State != infrav1.VirtualMachineStatePending {
@@ -336,6 +335,10 @@ func (r vmReconciler) reconcileNormal(ctx *context.VMContext, icsMachine *infrav
 	// If the ICSVM doesn't have our finalizer, add it.
 	ctrlutil.AddFinalizer(ctx.ICSVM, infrav1.VMFinalizer)
 
+	if ctx.ICSVM.Status.Ready && len(ctx.ICSVM.Status.Addresses) > 0 {
+		return reconcile.Result{}, nil
+	}
+
 	if err := r.reconcileIdentitySecret(ctx); err != nil {
 		conditions.MarkFalse(icsMachine, infrav1.ICenterAvailableCondition, infrav1.ICenterUnreachableReason, clusterv1.ConditionSeverityError, err.Error())
 		return reconcile.Result{}, err
@@ -350,12 +353,13 @@ func (r vmReconciler) reconcileNormal(ctx *context.VMContext, icsMachine *infrav
 
 	ctx.Session = authSession
 
+	klog.Infof("DavidWang# PC01, icsvm.status: %+v", ctx.ICSVM.Status)
 	// Implement selection of VM service based on ICS version
 	var vmService services.VirtualMachineService = &basev1.VMService{}
 	// Get or create the VM.
 	vm, err := vmService.ReconcileVM(ctx)
 	if err != nil {
-		if err.Error() == infrav1.PoweringOnFailedReason && len(ctx.ICSVM.Status.Addresses) == 0 {
+		if err.Error() == infrav1.PoweringOnFailedReason && !ctx.ICSVM.Status.Ready && len(ctx.ICSVM.Status.Addresses) == 0 {
 			var vmService services.VirtualMachineService = &basev1.VMService{}
 			_, _ = vmService.DestroyVM(ctx)
 			_ = r.reconcileIPAddressesDelete(ctx)
@@ -378,8 +382,7 @@ func (r vmReconciler) reconcileNormal(ctx *context.VMContext, icsMachine *infrav
 		return reconcile.Result{}, nil
 	}
 
-	// Update the ICSVM's BIOS UUID.
-	//ctx.Logger.Info("vm bios-uuid", "biosuuid", vm.BiosUUID)
+	klog.Infof("DavidWang# PC07, after ReconcileVM, vm info: %+v", vm)
 
 	// defensive check to ensure we are not removing the biosUUID
 	if vm.BiosUUID != "" {
@@ -409,6 +412,7 @@ func (r vmReconciler) reconcileNormal(ctx *context.VMContext, icsMachine *infrav
 }
 
 func (r vmReconciler) reconcileNetwork(ctx *context.VMContext, vm infrav1.VirtualMachine) {
+	klog.Infof("DavidWang# PC08, in reconcileNetwork, vm network: %+v", vm.Network)
 	infrautilv1.UpdateNetworkInfo(ctx, vm.Network)
 }
 

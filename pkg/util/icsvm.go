@@ -25,6 +25,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/klog"
 	clusterutilv1 "sigs.k8s.io/cluster-api/util"
 	ctrlutil "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
@@ -84,6 +85,7 @@ func UpdateNetworkInfo(ctx *context.VMContext, networkStatus []infrav1.NetworkSt
 	for _, netStatus := range ctx.ICSVM.Status.Network {
 		ipAddresses = append(ipAddresses, netStatus.IPAddrs...)
 	}
+	klog.Infof("DavidWang# PC_END, UpdateNetworkInfo, net status: %+v, icsvm status: %+v", networkStatus, ctx.ICSVM.Status)
 	//ctx.Logger.Info("vm ip addresses", "Addresses", ipAddresses)
 	ctx.ICSVM.Status.Addresses = ipAddresses
 }
@@ -108,6 +110,22 @@ func ConvertIPAddrsToPreAllocations(ipAddrs []string) map[string]string {
 	return ipMap
 }
 
+// CleanResidualIPBeforeCreating from cluster template
+func CleanResidualIPBeforeCreating(ctx *context.VMContext) error {
+	allocations := infrav1.IPAddressList{}
+	err := ctx.Client.List(ctx, &allocations)
+	if err != nil {
+		allocations = infrav1.IPAddressList{}
+	}
+	for _, ipAddress := range allocations.Items {
+		if ipAddress.Spec.VMRef.Name == ctx.ICSVM.Name && (ipAddress.GetDeletionTimestamp() == nil || ipAddress.GetDeletionTimestamp().IsZero()) {
+			_ = ctx.Client.Delete(ctx, &ipAddress)
+		}
+	}
+
+	return nil
+}
+
 // GetIPFromPools from cluster template
 func GetIPFromNetworkConfig(
 	ctx *context.VMContext,
@@ -126,10 +144,6 @@ func GetIPFromNetworkConfig(
 		allocations = infrav1.IPAddressList{}
 	}
 	for _, ipAddress := range allocations.Items {
-		if ipAddress.Spec.VMRef.Name == ctx.ICSVM.Name && ipAddress.GetDeletionTimestamp().IsZero() {
-			_ = ctx.Client.Delete(ctx, &ipAddress)
-			continue
-		}
 		allocatedIPMap[ipAddress.Spec.Address] = "unknown"
 	}
 

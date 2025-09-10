@@ -1,8 +1,8 @@
 # Build the manager binary
 # syntax=docker/dockerfile:experimental
-# ARG GOLANG_VERSION=golang:1.17.6
+#ARG GOLANG_VERSION=golang:1.17.6
 ARG GOLANG_VERSION=localhost:5000/golang:1.17.6
-FROM --platform=${BUILDPLATFORM} ${GOLANG_VERSION} as builder
+FROM --platform=${BUILDPLATFORM} ${GOLANG_VERSION} AS builder
 WORKDIR /workspace
 
 # Run this with docker build --build_arg $(go env GOPROXY) to override the goproxy
@@ -30,9 +30,10 @@ RUN --mount=type=bind,target=. \
     -o /out/manager .
 
 # Copy the controller-manager into a thin image
-ARG TARGETPLATFORM
 # FROM --platform=${TARGETPLATFORM} gcr.io/distroless/static:nonroot
-FROM --platform=${TARGETPLATFORM} localhost:5000/distroless/static:nonroot
+ARG TARGETPLATFORM
+# FROM gcr.io/distroless/static:nonroot
+FROM localhost:5000/distroless/static:nonroot
 WORKDIR /
 COPY --from=builder /out/manager .
 # Use uid of nonroot user (65532) because kubernetes expects numeric user when applying PSPs
