@@ -23,7 +23,6 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"k8s.io/klog"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 
 	basetypv1 "github.com/ics-sigs/ics-go-sdk/client/types"
@@ -122,7 +121,6 @@ func GetTask(ctx *context.VMContext) *basetypv1.TaskInfo {
 }
 
 func reconcileInFlightTask(ctx *context.VMContext) (bool, error) {
-	klog.Infof("DavidWang# ReconcileInFlightTask ICSVM [%s] Status: %+v", ctx.ICSVM.Name, ctx.ICSVM.Status)
 	// Check to see if there is an in-flight task.
 	task := GetTask(ctx)
 

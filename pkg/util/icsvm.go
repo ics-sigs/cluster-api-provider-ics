@@ -85,7 +85,7 @@ func UpdateNetworkInfo(ctx *context.VMContext, networkStatus []infrav1.NetworkSt
 	for _, netStatus := range ctx.ICSVM.Status.Network {
 		ipAddresses = append(ipAddresses, netStatus.IPAddrs...)
 	}
-	klog.Infof("DavidWang# PC_END, UpdateNetworkInfo, net status: %+v, icsvm status: %+v", networkStatus, ctx.ICSVM.Status)
+	klog.Infof("UpdateNetworkInfo, net status: %+v, icsvm status: %+v", networkStatus, ctx.ICSVM.Status)
 	//ctx.Logger.Info("vm ip addresses", "Addresses", ipAddresses)
 	ctx.ICSVM.Status.Addresses = ipAddresses
 }
