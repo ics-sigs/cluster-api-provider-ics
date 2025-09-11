@@ -264,6 +264,10 @@ func (r vmReconciler) Reconcile(ctx goctx.Context, req ctrl.Request) (_ ctrl.Res
 		return r.reconcileDelete(vmContext)
 	}
 
+	if !cluster.ObjectMeta.DeletionTimestamp.IsZero() {
+		klog.Warningf("ICSVM %s/%s linked to a cluster that is Deleting", icsVM.Namespace, icsVM.Name)
+		return reconcile.Result{}, nil
+	}
 	// Handle non-deleted machines
 	return r.reconcileNormal(vmContext, icsMachine)
 }
@@ -294,7 +298,7 @@ func (r vmReconciler) reconcileDelete(ctx *context.VMContext) (reconcile.Result,
 				// The VM is deleted so remove the finalizer.
 				ctrlutil.RemoveFinalizer(ctx.ICSVM, infrav1.VMFinalizer)
 			}
-			return reconcile.Result{}, nil
+			return reconcile.Result{}, errors.New("Requeue the operation until the vm with the expected state")
 		}
 	}
 	_ = r.reconcileIPAddressesDelete(ctx)
